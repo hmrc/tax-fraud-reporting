@@ -1,3 +1,6 @@
 # microservice specific routes
 
 GET        /hello-world             uk.gov.hmrc.taxfraudreporting.controllers.MicroserviceHelloWorldController.hello
+
+OPTIONS    /create-report           uk.gov.hmrc.taxfraudreporting.controllers.MicroserviceHelloWorldController.handleOptions
+POST       /create-report           uk.gov.hmrc.taxfraudreporting.controllers.MicroserviceHelloWorldController.postReport
