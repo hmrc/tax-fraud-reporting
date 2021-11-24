@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxfraudreporting.data_formats
+package uk.gov.hmrc.taxfraudreporting
 
-import play.api.libs.json.{Json, Reads}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import org.xml.sax.InputSource
+import uk.gov.hmrc.taxfraudreporting.services.EviBDAppDocValidator
 
-case class Address(street: String, townOrCity: String, county: String, postCode: String)
+class EviBDAppDocValidatorSpec extends AnyFlatSpec with GuiceOneAppPerSuite {
+  "XSD file" must "validate example XML" in {
+    val validator = app.injector.instanceOf[EviBDAppDocValidator]
+    val xmlStream = getClass getResourceAsStream "/DIGITAL_EVIBDAPP_202112201600_FRAUD_REPORTS.xml"
 
-object Address {
-  implicit val reads: Reads[Address] = Json.reads
+    validator validate new InputSource(xmlStream)
+  }
 }

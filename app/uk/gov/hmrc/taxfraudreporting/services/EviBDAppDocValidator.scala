@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxfraudreporting.controllers
+package uk.gov.hmrc.taxfraudreporting.services
 
-import play.api.mvc.{ActionBuilderImpl, BodyParsers, Request, Result}
+import play.api.Environment
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-case class ApiActionBuilder @Inject() (override val parser: BodyParsers.Default)(implicit ec: ExecutionContext)
-    extends ActionBuilderImpl(parser) {
-
-  override def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] =
-    block(request) map { _.withHeaders("Access-Control-Allow-Origin" -> "*") }
-
-}
+class EviBDAppDocValidator @Inject() (environment: Environment)
+    extends XmlValidator("schema/EVI_BDApp_doc.xsd", environment)
