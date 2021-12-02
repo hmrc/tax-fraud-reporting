@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Contact Details",
+  "type": "object",
+  "properties": {
+    "landline_Number": {"$ref": "#/definitions/PhoneNumber"},
+    "mobile_Number": {"$ref": "#/definitions/PhoneNumber"},
+    "email_Address": {"type": "string", "maxLength": 255}
+  },
+  "definitions": {
+    "PhoneNumber": {"type": "string", "pattern": "^(\\+\\d)?[0-9 ]{11}"}
+  }
+}
