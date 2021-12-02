@@ -14,23 +14,29 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxfraudreporting.controllers
+package uk.gov.hmrc.taxfraudreporting.services
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-import play.api.http.Status
-import play.api.test.Helpers._
-import play.api.test.{FakeRequest, Helpers}
+import com.google.inject.{Inject, Singleton}
+import play.api.Environment
+import play.api.libs.json.{JsValue, Json}
 
-class MicroserviceHelloWorldControllerSpec extends AnyWordSpec with Matchers {
+import java.io.IOException
+import scala.io.Source
+import scala.language.postfixOps
 
-  private val fakeRequest = FakeRequest("GET", "/")
-  private val controller  = new MicroserviceHelloWorldController(Helpers.stubControllerComponents())
+@Singleton
+class ResourceService @Inject() (environment: Environment) {
 
-  "GET /" should {
-    "return 200" in {
-      val result = controller.hello()(fakeRequest)
-      status(result) shouldBe Status.OK
+  def getFile(resource: String): String = {
+
+    val stream = environment resourceAsStream resource getOrElse {
+      throw new IOException(s"resource not found: $resource")
     }
+
+    Source fromInputStream stream mkString
   }
+
+  def getJson(resource: String): JsValue =
+    Json parse getFile(resource)
+
 }

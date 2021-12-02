@@ -1,0 +1,53 @@
+{
+  "_id": "XXX",
+  "sentToSdes": false,
+  "isProcessed": false,
+  "correlationId": "e18518f6-1f2c-4c63-9884-0fc1e10ea329",
+  "taxFraudType": "Business",
+  "taxFraudData": {
+    "activity_Type": "CJRS",
+    "business": {
+      "business_Name": "",
+      "business_Type": "",
+      "employee_Count": 100,
+      "address": {
+        "address_Line_1": "111",
+        "address_Line_2": "",
+        "address_Line_3": "",
+        "town_City": "",
+        "postcode": "EH12 9JE",
+        "country": "",
+        "general_Location": ""
+      },
+      "contactDetails": {
+        "landlineNumber": "",
+        "mobileNumber": "",
+        "emailAddress": "shine.alex@digital.hmrc.gov.uk"
+      },
+      "businessTradingYears": "Over 5 years",
+      "reporterRelation": {
+        "relation": "My employer",
+        "isCurrent": false
+      },
+      "VAT_Number": "0987654321",
+      "ct_Utr": "1235476890",
+      "employee_Number": "123/AB456",
+      "sa_Utr": "0987654321"
+    },
+    "value_Fraud": 10000,
+    "value_Fraud_Band": "4",
+    "duration_Fraud": "Over 5 years",
+    "anyone_Else_Know": "Prefer not to say",
+    "how_Many_Know": 6,
+    "additional_Details": "You have 250 words",
+    "reporter": {
+      "forename": "",
+      "surname": "",
+      "telephone_Number": "",
+      "email_Address": "modestas.ruksnaitis@digital.hmrc.gov.uk",
+      "memorable_Word": ""
+    },
+    "supporting_Evidence": true
+  },
+  "submitted": "2021-08-20T14:29:10"
+}

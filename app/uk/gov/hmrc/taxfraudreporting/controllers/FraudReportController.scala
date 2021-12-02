@@ -16,16 +16,26 @@
 
 package uk.gov.hmrc.taxfraudreporting.controllers
 
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.taxfraudreporting.services.JsonValidationService
+
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
 
 @Singleton()
-class MicroserviceHelloWorldController @Inject() (cc: ControllerComponents) extends BackendController(cc) {
+class FraudReportController @Inject() (cc: ControllerComponents, vs: JsonValidationService)
+    extends BackendController(cc) {
 
-  def hello(): Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok("Hello world"))
+  def hello: Action[AnyContent] = Action {
+    Ok("Hello world")
+  }
+
+  def postReport: Action[JsValue] = Action(parse.json) { request =>
+    vs getValidator "fraudReport_schema" validate request.body match {
+      case Nil    => Ok(Json parse """{"success": "Fraud report submitted"}""")
+      case errors => BadRequest(Json toJson errors)
+    }
   }
 
 }

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Person",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "object",
+      "properties": {
+        "forename": {"$ref": "#/definitions/NameString"},
+        "surname": {"$ref": "#/definitions/NameString"},
+        "middle_Name": {"$ref": "#/definitions/NameString"},
+        "alias": {"$ref": "#/definitions/NameString"}
+      }
+    },
+    "address": {"$ref": "resource:/schema/address.schema.json"},
+    "contact": {"$ref": "resource:/schema/contact-details.schema.json"},
+    "dob": {"type": "string", "pattern": "^\\d\\d/\\d\\d/\\d{4}$"},
+    "age": {"type": "integer", "minimum": 18, "maximum": 120},
+    "connection": {
+      "type": "object",
+      "properties": {
+        "connection_Type": {
+          "type": "string",
+          "enum": [
+            "Partner",
+            "Family member",
+            "Business partner",
+            "Employer",
+            "Employee",
+            "Colleague",
+            "Friend",
+            "Neighbour",
+            "Customer",
+            "Business competitor"
+          ]
+        },
+        "current_Connection": {"type": "boolean"}
+      }
+    },
+    "niNumber": {"type": "string", "pattern": "^[A-Z]{2} ?(\\d\\d ?){3}[A-Z]$"},
+    "business": {"$ref": "resource:/schema/business-details.schema.json"}
+  },
+  "definitions": {
+    "NameString": {"type": "string", "pattern": "^[a-zA-Z- ']{0,255}$"}
+  }
+}
