@@ -17,26 +17,33 @@
 package uk.gov.hmrc.taxfraudreporting.controllers
 
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.taxfraudreporting.services.JsonValidationService
+import uk.gov.hmrc.taxfraudreporting.repositories.FraudReportRepository
 
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton()
-class FraudReportController @Inject() (
-  controllerComponents: ControllerComponents,
-  jsonValidationService: JsonValidationService
-) extends BackendController(controllerComponents) {
+class FraudReportController @Inject() (cc: ControllerComponents, repository: FraudReportRepository)(implicit
+  executionContext: ExecutionContext
+) extends BackendController(cc) {
 
-  def hello: Action[AnyContent] = Action {
-    Ok("Hello world")
-  }
+  val CorrelationIdKey = "X-Correlation-ID"
 
-  def postReport: Action[JsValue] = Action(parse.json) { request =>
-    jsonValidationService getValidator "fraudReport_schema" validate request.body match {
-      case Nil    => Ok(Json parse """{"success": "Fraud report submitted"}""")
-      case errors => BadRequest(Json toJson errors)
+  def postFraudReport: Action[JsValue] = Action.async(parse.json) { request =>
+    request.headers.get(CorrelationIdKey) match {
+      case Some(correlation_id) =>
+        repository.insert(request.body, correlation_id, sentToSdes = false) map { result =>
+          result.fold(
+            errors => BadRequest(Json.obj("errors" -> Json.toJson(errors))),
+            _ => Accepted(Json parse """{"success": "Fraud report submitted"}""")
+          )
+        }
+      case None =>
+        Future.successful {
+          BadRequest(Json.obj("errors" -> Json.arr("Missing X-Correlation-ID header")))
+        }
     }
   }
 
