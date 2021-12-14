@@ -16,60 +16,55 @@
 
 package uk.gov.hmrc.taxfraudreporting.controllers
 
-import org.mockito.Mockito.when
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.mockito.MockitoSugar
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.taxfraudreporting.services.JsonValidationService
+import uk.gov.hmrc.taxfraudreporting.mocks.MockFraudReportRepository
 
-class FraudReportControllerSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar {
-  private val mockJson = Json.obj()
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
-  private def serviceWhoseValidatorReturns(mockErrors: List[String]) = {
-    val schemaName        = "fraudReport_schema"
-    val validationService = mock[JsonValidationService]
-    val validator         = mock[validationService.Validator]
-
-    when(validator validate mockJson) thenReturn mockErrors
-    when(validationService getValidator schemaName) thenReturn validator
-
-    validationService
-  }
-
-  private val successfulValidationService = serviceWhoseValidatorReturns(mockErrors = Nil)
-
-  "GET /hello-world" should {
-
-    val fakeRequest = FakeRequest("GET", "/hello-world")
-    val controller  = new FraudReportController(stubControllerComponents(), successfulValidationService)
-
-    "return 200" in {
-      val result = controller.hello(fakeRequest)
-      status(result) shouldBe OK
-    }
-  }
+class FraudReportControllerSpec extends AnyWordSpec with Matchers {
 
   "POST /create-report" should {
-    val postReportURL = uk.gov.hmrc.taxfraudreporting.controllers.routes.FraudReportController.postReport().url
+    val postFraudReportURL =
+      uk.gov.hmrc.taxfraudreporting.controllers.routes.FraudReportController.postFraudReport().url
 
-    val mockJsonRequest =
-      FakeRequest("Post", postReportURL) withBody mockJson withHeaders "Content-Type" -> "application/json"
+    def mockJsonRequest(data: JsValue, withCid: Boolean = true) = {
+      val req = FakeRequest("Post", postFraudReportURL) withBody data withHeaders "Content-Type" -> "application/json"
 
-    "return 200 given a valid fraud report" in {
-      val controller = new FraudReportController(stubControllerComponents(), successfulValidationService)
-      val result     = controller.postReport(mockJsonRequest)
-      status(result) shouldBe OK
+      if (withCid)
+        req withHeaders "X-Correlation-ID" -> ""
+      else
+        req
     }
 
-    "return 400 given an invalid fraud report" in {
-      val failingValidationService = serviceWhoseValidatorReturns(List("Validation error"))
+    val succeedingRepo                        = new MockFraudReportRepository(true)
+    implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
-      val controller = new FraudReportController(stubControllerComponents(), failingValidationService)
-      val result     = controller.postReport(mockJsonRequest)
+    val requestWithObj = mockJsonRequest(Json.obj())
+
+    "respond 202 Accepted given a valid fraud report" in {
+      val controller = new FraudReportController(stubControllerComponents(), succeedingRepo)
+
+      val result = controller.postFraudReport(requestWithObj)
+      status(result) shouldBe ACCEPTED
+    }
+
+    "respond 400 Bad Request when given an invalid fraud report" in {
+      val failingRepo = new MockFraudReportRepository(false)
+      val controller  = new FraudReportController(stubControllerComponents(), failingRepo)
+
+      val result = controller.postFraudReport(requestWithObj)
+      status(result) shouldBe BAD_REQUEST
+    }
+
+    "respond 400 Bad Request when missing X-Correlation-ID header" in {
+      val requestSansCid = mockJsonRequest(Json.arr(), withCid = false)
+      val controller     = new FraudReportController(stubControllerComponents(), succeedingRepo)
+
+      val result = controller.postFraudReport(requestSansCid)
       status(result) shouldBe BAD_REQUEST
     }
   }

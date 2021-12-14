@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package services
+package uk.gov.hmrc.taxfraudreporting.services
 
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -45,7 +45,7 @@ class ValidationServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
   }
 
   "Fraud report schema" must {
-    val validator = validationService getValidator "fraud-report.schema"
+    val validator = validationService getValidator "fraud-report-body.schema"
 
     "validate example business JSON" in {
       val jsonStream = getClass getResourceAsStream "/example-business.json"

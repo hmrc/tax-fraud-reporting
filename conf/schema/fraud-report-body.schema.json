@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Fraud Report Body",
+  "type": "object",
+  "properties": {
+    "activity_Type": {"$ref": "resource:/schema/activity-type.schema.json"},
+    "taxFraudType": {
+      "type": "string",
+      "enum": ["Person", "Business"]
+    },
+    "business": {"$ref": "resource:/schema/business-details.schema.json"},
+    "persons": {
+      "type": "array",
+      "items": {"$ref": "resource:/schema/person.schema.json"}
+    },
+    "value_Fraud": {"type": "integer", "minimum": 1, "maximum": 9999999999},
+    "value_Fraud_Band": {"type": "string", "pattern": "^[1-5]$"},
+    "duration_Fraud": {
+      "type": "string",
+      "enum": [
+        "Over 5 years",
+        "Between 1 and 5 years",
+        "Between 6 months and 1 year",
+        "Under 6 months",
+        "It will happen in the future",
+        "I don't know"
+      ]
+    },
+    "anyone_Else_Know": {
+      "type": "string",
+      "enum": ["Yes", "No", "Don't know", "Prefer not to say"]
+    },
+    "how_Many_Know": {"type": "integer", "minimum": 0, "maximum": 999999},
+    "additional_Details": {"type": "string", "maxLength": 1500},
+    "reporter": {
+      "type": "object",
+      "properties": {
+        "forename": {"type": "string", "pattern": "^[A-Za-z- ']*$", "maxLength": 255},
+        "surname": {"type": "string", "pattern": "^[A-Za-z- ']*$", "maxLength": 255},
+        "telephone_Number": {"type": "string", "pattern": "^\\+?[0-9 -]*$", "maxLength": 255},
+        "email_Address": {"type": "string", "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+(\\.[a-zA-Z]{2,})+$"},
+        "memorable_Word": {"type": "string", "pattern": "^[A-Za-z0-9]*$", "maxLength": 255}
+      }
+    },
+    "supporting_Evidence": {"type": "boolean"}
+  }
+}

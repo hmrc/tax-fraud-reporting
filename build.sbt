@@ -11,7 +11,7 @@ lazy val scoverageSettings: Seq[Setting[_]] = Seq(
   coverageMinimum := 93,
   coverageFailOnMinimum := true,
   coverageHighlighting := true,
-  parallelExecution in Test := false
+  Test / parallelExecution := false
 )
 
 
