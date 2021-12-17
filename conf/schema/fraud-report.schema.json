@@ -1,13 +1,21 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Tax Fraud Data",
+  "title": "Fraud Report Body",
   "type": "object",
   "properties": {
+    "correlation_ID": {"type": "string"},
+    "submitted": {"type": "string", "format": "date-time"},
     "activity_Type": {"$ref": "resource:/schema/activity-type.schema.json"},
-    "business": {"$ref": "resource:/schema/business-details.schema.json"},
-    "persons": {
-      "type": "array",
-      "items": {"$ref": "resource:/schema/person.schema.json"}
+    "Nominals": {
+      "oneOf": [
+        {"$ref": "resource:/schema/business-details.schema.json"},
+        {
+          "type": "array",
+          "items": {"$ref": "resource:/schema/person.schema.json"},
+          "minItems": 1,
+          "maxItems": 5
+        }
+      ]
     },
     "value_Fraud": {"type": "integer", "minimum": 1, "maximum": 9999999999},
     "value_Fraud_Band": {"type": "string", "pattern": "^[1-5]$"},
@@ -39,5 +47,6 @@
       }
     },
     "supporting_Evidence": {"type": "boolean"}
-  }
+  },
+  "additionalProperties": false
 }

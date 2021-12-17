@@ -13,5 +13,6 @@
     },
     "country": {"type": "string", "maxLength": 255},
     "general_Location": {"type": "string", "maxLength": 255}
-  }
+  },
+  "additionalProperties": false
 }

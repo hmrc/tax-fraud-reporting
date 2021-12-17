@@ -5,7 +5,7 @@
   "properties": {
     "business_Name": {"type": "string", "maxLength":  255},
     "business_Type": {"type": "string", "maxLength":  255},
-    "employee_Count": {"type": "integer", "minimum": 1},
+    "employee_Count": {"type": "integer", "minimum": 0},
     "address": {"$ref": "resource:/schema/address.schema.json"},
     "contactDetails": {"$ref": "resource:/schema/contact-details.schema.json"},
     "businessTradingYears": {
@@ -45,5 +45,6 @@
   },
   "definitions": {
     "UTR": {"type": "string", "pattern": "^\\d{10}$"}
-  }
+  },
+  "additionalProperties": false
 }

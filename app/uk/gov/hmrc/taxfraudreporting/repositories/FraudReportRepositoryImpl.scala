@@ -45,7 +45,7 @@ class FraudReportRepositoryImpl @Inject() (
       )
     ) with FraudReportRepository {
 
-  private val validator = validationService getValidator "fraud-report-body.schema"
+  private val validator = validationService getValidator "fraud-report.schema"
 
   def insert(
     fraudReportBody: JsValue,
