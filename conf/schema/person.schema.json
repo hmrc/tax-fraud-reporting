@@ -42,5 +42,6 @@
   },
   "definitions": {
     "NameString": {"type": "string", "pattern": "^[a-zA-Z- ']{0,255}$"}
-  }
+  },
+  "additionalProperties": false
 }

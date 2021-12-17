@@ -20,7 +20,6 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.Json
-import uk.gov.hmrc.taxfraudreporting.services.JsonValidationService
 
 class ValidationServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite {
 
@@ -45,7 +44,7 @@ class ValidationServiceSpec extends AnyWordSpec with Matchers with GuiceOneAppPe
   }
 
   "Fraud report schema" must {
-    val validator = validationService getValidator "fraud-report-body.schema"
+    val validator = validationService getValidator "fraud-report.schema"
 
     "validate example business JSON" in {
       val jsonStream = getClass getResourceAsStream "/example-business.json"

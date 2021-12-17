@@ -8,6 +8,7 @@
     "email_Address": {"type": "string", "maxLength": 255}
   },
   "definitions": {
-    "PhoneNumber": {"type": "string", "pattern": "^(\\+\\d)?[0-9 ]{11}"}
-  }
+    "PhoneNumber": {"type": "string", "pattern": "^(\\+\\d)?( ?[0-9]){11}"}
+  },
+  "additionalProperties": false
 }
