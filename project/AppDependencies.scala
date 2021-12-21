@@ -1,6 +1,3 @@
-import play.core.PlayVersion
-import play.sbt.PlayImport._
-import sbt.Keys.libraryDependencies
 import sbt._
 
 object AppDependencies {
@@ -9,7 +6,9 @@ object AppDependencies {
     "uk.gov.hmrc"                  %% "bootstrap-backend-play-28" % "5.16.0",
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-28"        % "0.56.0",
     "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.12.4",
-    "com.github.java-json-tools"    % "json-schema-validator"     % "2.2.14"
+    "com.github.java-json-tools"    % "json-schema-validator"     % "2.2.14",
+    "uk.gov.hmrc.objectstore"      %% "object-store-client-play-28" % "0.39.0",
+    "uk.gov.hmrc"                  %% "internal-auth-client-play-28" % "1.0.0"
   )
 
   val test = Seq(
