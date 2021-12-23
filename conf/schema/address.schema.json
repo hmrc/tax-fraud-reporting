@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Address",
+  "type": "object",
+  "properties": {
+    "address_Line_1": {"type": "string", "maxLength": 255},
+    "address_Line_2": {"type": "string", "maxLength": 255},
+    "address_Line_3": {"type": "string", "maxLength": 255},
+    "town_City": {"type": "string", "maxLength": 255},
+    "postcode": {
+      "type": "string",
+      "pattern": "^[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}$"
+    },
+    "country": {"type": "string", "maxLength": 255},
+    "general_Location": {"type": "string", "maxLength": 255}
+  },
+  "additionalProperties": false
+}

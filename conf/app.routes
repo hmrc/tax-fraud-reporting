@@ -1,1 +1,3 @@
 # microservice specific routes
+
+POST       /create-report           uk.gov.hmrc.taxfraudreporting.controllers.FraudReportController.postFraudReport

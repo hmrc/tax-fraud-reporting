@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Business Details",
+  "type": "object",
+  "properties": {
+    "business_Name": {"type": "string", "maxLength":  255},
+    "business_Type": {"type": "string", "maxLength":  255},
+    "employee_Count": {"type": "integer", "minimum": 0},
+    "address": {"$ref": "resource:/schema/address.schema.json"},
+    "contactDetails": {"$ref": "resource:/schema/contact-details.schema.json"},
+    "businessTradingYears": {
+      "type": "string",
+      "enum": [
+        "Over 5 years",
+        "Between 1 and 5 years",
+        "Between 6 months and 1 year",
+        "Under 6 months",
+        "I don't know"
+      ]
+    },
+    "reporterRelation": {
+      "type": "object",
+      "properties": {
+        "relation": {
+          "type": "string",
+          "enum": [
+            "My employer",
+            "My business competitor",
+            "My client",
+            "My supplier",
+            "I am a customer",
+            "I am an accountant",
+            "I am a tax adviser",
+            "I am an auditor",
+            "I am a treasurer"
+          ]
+        },
+        "isCurrent": {"type": "boolean"}
+      }
+    },
+    "VAT_Number": {"type": "string", "pattern": "^(GB)?\\d{3} ?\\d{4} ?\\d{3}$"},
+    "ct_Utr": {"$ref": "#/definitions/UTR"},
+    "employee_Number": {"type": "string", "pattern": "^\\d{3}/[0-9A-Z]{5}$"},
+    "sa_Utr": {"$ref": "#/definitions/UTR"}
+  },
+  "definitions": {
+    "UTR": {"type": "string", "pattern": "^\\d{10}$"}
+  },
+  "additionalProperties": false
+}

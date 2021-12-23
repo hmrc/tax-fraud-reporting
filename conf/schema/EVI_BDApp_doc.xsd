@@ -35,13 +35,7 @@
 	<xs:complexType name="FraudReport">
 		<xs:sequence>
 			<xs:element name="report_Number" type="ReportNumber"/>
-			<xs:element name="digital_ID">
-				<xs:simpleType>
-					<xs:restriction base="xs:token">
-						<xs:pattern value="[a-zA-Z0-9]{3}"/>
-					</xs:restriction>
-				</xs:simpleType>
-			</xs:element>
+			<xs:element name="digital_ID" type="String50"/>
 			<xs:element name="submitted" type="DateTime"/>
 			<xs:element name="activity_Type" type="ActivityType"/>
 			<xs:element name="nominals">

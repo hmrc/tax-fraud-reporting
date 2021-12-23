@@ -37,6 +37,3 @@ target
 test-result
 tmp
 .vscode/
-
-# temp file for XML validation using SAX
-conf/*.xml

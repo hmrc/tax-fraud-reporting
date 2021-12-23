@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxfraudreporting
+package uk.gov.hmrc.taxfraudreporting.repositories
 
-import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import org.xml.sax.InputSource
-import uk.gov.hmrc.taxfraudreporting.services.EviBDAppDocValidator
+import com.google.inject.ImplementedBy
+import play.api.libs.json.JsValue
+import uk.gov.hmrc.taxfraudreporting.models.{FraudReference, FraudReport}
 
-class EviBDAppDocValidatorSpec extends AnyFlatSpec with GuiceOneAppPerSuite {
-  "XSD file" must "validate example XML" in {
-    val validator = app.injector.instanceOf[EviBDAppDocValidator]
-    val xmlStream = getClass getResourceAsStream "/DIGITAL_EVIBDAPP_202112201600_FRAUD_REPORTS.xml"
+import scala.concurrent.Future
 
-    validator validate new InputSource(xmlStream)
-  }
+@ImplementedBy(classOf[FraudReportRepositoryImpl])
+trait FraudReportRepository {
+
+  def insert(data: JsValue, correlationId: String, sentToSdes: Boolean): Future[Either[List[String], FraudReport]]
+
+  def get(id: FraudReference): Future[Option[FraudReport]]
+
+  def remove(id: FraudReference): Future[Option[FraudReport]]
+
 }
