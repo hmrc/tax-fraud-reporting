@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxfraudreporting.integration
 
-import akka.stream.Materializer
 import org.scalatest.Inside.inside
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -28,11 +27,9 @@ import uk.gov.hmrc.taxfraudreporting.repositories.{FraudReferenceRepository, Fra
 import uk.gov.hmrc.taxfraudreporting.services.JsonValidationService
 
 import scala.concurrent.ExecutionContext
-import scala.language.{implicitConversions, postfixOps}
 
 class FraudReportRepositorySpec extends IntegrationSpecCommonBase with DefaultPlayMongoRepositorySupport[FraudReport] {
   private implicit val ec: ExecutionContext = injector.instanceOf[ExecutionContext]
-  private implicit val mat: Materializer    = injector.instanceOf[Materializer]
   private val validationService             = injector.instanceOf[JsonValidationService]
   private val fraudReferenceService         = injector.instanceOf[FraudReferenceRepository]
 

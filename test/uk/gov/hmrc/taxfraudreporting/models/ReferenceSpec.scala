@@ -24,8 +24,6 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks._
 import play.api.libs.json.{JsString, Json}
 import play.api.mvc.PathBindable
 
-import scala.language.postfixOps
-
 class ReferenceSpec extends AnyFreeSpec with Matchers with EitherValues with OptionValues {
 
   "a fraud reference" - {

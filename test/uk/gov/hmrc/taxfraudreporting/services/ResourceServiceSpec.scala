@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.taxfraudreporting.services
 
-import java.io.IOException
 import com.fasterxml.jackson.core.JsonParseException
-import play.api.libs.json.Json
-import play.api.test.Injecting
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import uk.gov.hmrc.taxfraudreporting.services.ResourceService
+import play.api.libs.json.Json
+import play.api.test.Injecting
+
+import java.io.IOException
 
 class ResourceServiceSpec extends AnyFreeSpec with Matchers with GuiceOneAppPerSuite with Injecting {
 
@@ -44,7 +44,7 @@ class ResourceServiceSpec extends AnyFreeSpec with Matchers with GuiceOneAppPerS
     "must throw an exception when a file can't be found" in {
 
       an[IOException] mustBe thrownBy {
-        resourceService.getFile("non-existant.txt")
+        resourceService.getFile("non-existent.txt")
       }
     }
 
