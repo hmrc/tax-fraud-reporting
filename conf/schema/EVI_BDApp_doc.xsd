@@ -6,7 +6,7 @@
 		<xs:sequence>
 			<xs:element name="sending_System" type="xs:string" fixed="RIS Fraud Reporting"/>
 			<xs:element name="receiving_System" type="xs:string" fixed="EVI BDApp"/>
-			<xs:element name="extract_Date_Time" type="DateTime"/>
+			<xs:element name="extract_Date_Time" type="xs:string"/>
 			<xs:element name="filename">
 				<xs:simpleType>
 					<xs:restriction base="xs:string">

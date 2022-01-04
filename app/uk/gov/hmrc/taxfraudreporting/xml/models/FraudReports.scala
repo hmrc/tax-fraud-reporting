@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxfraudreporting.data_formats
+package uk.gov.hmrc.taxfraudreporting.xml.models
 
-import play.api.libs.json.{Json, Reads}
+import uk.gov.hmrc.taxfraudreporting.xml.util.FraudReportXml
 
-case class EvasionData(evasionCategory: String, fraudLocation: Address, reportedBy: String)
+import scala.xml.Elem
 
-object EvasionData {
-  implicit val reads: Reads[EvasionData] = Json.reads
+case class FraudReports(fileHeader: FileHeader, fileBody: Seq[FileBody]) extends FraudReportXml {
+
+  override def toXml: Elem =
+    <reports>
+        {fileHeader.toXml}
+        {fileBody.map(value => value.toXml)}
+    </reports>
+
 }
