@@ -14,21 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxfraudreporting.repositories
+package uk.gov.hmrc.taxfraudreporting.models
 
-import com.google.inject.ImplementedBy
-import play.api.libs.json.JsValue
-import uk.gov.hmrc.taxfraudreporting.models.{FraudReference, FraudReport}
+import play.api.libs.json.{JsError, JsPath, JsonValidationError}
 
-import scala.concurrent.Future
+sealed class FraudReportStatusJsError(msg: String) extends JsError(Seq(JsPath() -> Seq(JsonValidationError(msg))))
 
-@ImplementedBy(classOf[FraudReportRepositoryImpl])
-trait FraudReportRepository {
-
-  def insert(data: JsValue, id: String): Future[Either[List[String], FraudReport]]
-
-  def get(id: FraudReference): Future[Option[FraudReport]]
-
-  def remove(id: FraudReference): Future[Option[FraudReport]]
-
+object FraudReportStatusJsError {
+  val InvalidJsValueSubtype = new FraudReportStatusJsError("JsValue must a JsString.")
+  val InvalidJsStringValue  = new FraudReportStatusJsError("Cannot parse given JsString value.")
 }

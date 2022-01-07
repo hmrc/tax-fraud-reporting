@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxfraudreporting.integration
+package integration
 
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import play.api.inject.guice.GuiceApplicationBuilder
