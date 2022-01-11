@@ -16,21 +16,10 @@
 
 package uk.gov.hmrc.taxfraudreporting.xml.mapping
 
-import play.api.libs.json.{JsArray, JsDefined, JsLookup, JsLookupResult, JsUndefined, JsValue, Json}
 import play.api.libs.json.JsValue.jsValueToJsLookup
+import play.api.libs.json._
 import uk.gov.hmrc.taxfraudreporting.models.FraudReport
-import uk.gov.hmrc.taxfraudreporting.xml.models.{
-  Address,
-  Business,
-  Contact,
-  FileBody,
-  FileHeader,
-  FraudReports,
-  Name,
-  Nominals,
-  Person,
-  Reporter
-}
+import uk.gov.hmrc.taxfraudreporting.xml.models._
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -50,7 +39,7 @@ object FraudReportMapper {
   }
 
   def getFileHeader(data: Seq[FraudReport]): FileHeader = {
-    val timeNow                     = LocalDateTime.now();
+    val timeNow                     = LocalDateTime.now()
     def now(format: String): String = timeNow.format(DateTimeFormatter.ofPattern(format))
 
     FileHeader(
@@ -66,33 +55,33 @@ object FraudReportMapper {
   }
 
   def getFileBody(data: FraudReport): FileBody = {
-    val jsonData: JsLookup = jsValueToJsLookup(data.body)
+    val jsonData = jsValueToJsLookup(data.body)
 
     FileBody(
       report_Number = data._id.toString,
       digital_ID = data._id.toString, //Need to confirm with business
-      submitted = data.submitted.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")),
-      activity_Type = jsonData.\("activity_Type").as[String],
-      nominals = getNominal(jsonData),
-      value_Fraud = jsonData.\("value_Fraud").as[String],
-      value_Fraud_Band = jsonData.\("value_Fraud_Band").asOpt[String],
-      duration_Fraud = jsonData.\("duration_Fraud").as[String],
-      how_Many_Knew = jsonData.\("how_Many_Knew").as[String],
-      additional_Details = jsonData.\("additional_Details").asOpt[String],
-      reporter = getReporter(jsonData.\("reporter")),
-      supporting_Evidence = jsonData.\("supporting_Evidence").asOpt[Boolean]
+      data.submitted.format(DateTimeFormatter ofPattern "dd/MM/yyyy HH:mm:ss"),
+      (jsonData \ "activity_Type").as[String],
+      getNominal(jsonData),
+      (jsonData \ "value_Fraud").as[String],
+      (jsonData \ "value_Fraud_Band").asOpt[String],
+      (jsonData \ "duration_Fraud").as[String],
+      (jsonData \ "how_Many_Knew").as[String],
+      (jsonData \ "additional_Details").asOpt[String],
+      getReporter(jsonData \ "reporter"),
+      (jsonData \ "supporting_Evidence").asOpt[Boolean]
     )
   }
 
   def getNominal(data: JsLookup): Nominals = {
 
-    val persons: JsArray = data.\("person") match {
+    val persons: JsArray = data \ "person" match {
       case JsDefined(value) => value.as[JsArray]
       case _: JsUndefined   => Json.arr()
     }
 
-    val personsXml: Seq[Person]    = persons.value.map(value => getPersons(value))
-    val business: Option[Business] = getBusiness(data.\("business"))
+    val personsXml: Seq[Person]    = persons.value map getPersons
+    val business: Option[Business] = getBusiness(data \ "business")
 
     Nominals(personsXml, business)
   }
@@ -100,13 +89,13 @@ object FraudReportMapper {
   def getPersons(person: JsValue): Person =
     if (person.isDefined)
       Person(
-        name = getName(person.\("name")),
-        address = getAddress(person.\("address")),
-        contact = getContact(person.\("contact")),
-        dob = person.\("dob").asOpt[String],
-        age = person.\("age").asOpt[String],
-        connection_Type = person.\("connection_Type").asOpt[String],
-        NINO = person.\("NINO").asOpt[String]
+        getName(person \ "name"),
+        getAddress(person \ "address"),
+        getContact(person \ "contact"),
+        (person \ "dob").asOpt[String],
+        (person \ "age").asOpt[String],
+        (person \ "connection_Type").asOpt[String],
+        (person \ "NINO").asOpt[String]
       )
     else null
 

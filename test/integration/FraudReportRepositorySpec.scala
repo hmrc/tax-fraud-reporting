@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxfraudreporting.integration
+package integration
 
 import org.scalatest.Inside.inside
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
@@ -22,7 +22,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
-import uk.gov.hmrc.taxfraudreporting.models.FraudReport
+import uk.gov.hmrc.taxfraudreporting.models.{FraudReport, FraudReportStatus}
 import uk.gov.hmrc.taxfraudreporting.repositories.{FraudReferenceRepository, FraudReportRepositoryImpl}
 import uk.gov.hmrc.taxfraudreporting.services.JsonValidationService
 
@@ -54,10 +54,9 @@ class FraudReportRepositorySpec extends IntegrationSpecCommonBase with DefaultPl
   lazy val builder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
 
+  val correlationId = "fe28db96-d9db-4220-9e12-f2d267267c29"
+
   "a fraud report repository" should {
-
-    val correlationId = "fe28db96-d9db-4220-9e12-f2d267267c29"
-
     List("business", "person") foreach { dataName =>
       val fileName    = s"example-$dataName.json"
       val stream      = getClass.getClassLoader getResourceAsStream fileName
@@ -72,14 +71,15 @@ class FraudReportRepositorySpec extends IntegrationSpecCommonBase with DefaultPl
 
         running(app) {
 
-          val document = repository.insert(inputData, correlationId, sentToSdes = false).futureValue.right.get
+          val document = repository.insert(inputData, correlationId).futureValue.right.get
 
           inside(document) {
-            case FraudReport(_id, _, _, cid, body, _) =>
+            case FraudReport(_id, cid, body, _, _) =>
               _id mustEqual document._id
               cid mustEqual correlationId
               body mustEqual inputData
 
+              repository.update(document._id, FraudReportStatus.Processed).futureValue
               repository.remove(document._id).futureValue
               repository.get(document._id).futureValue mustBe empty
           }
@@ -91,11 +91,11 @@ class FraudReportRepositorySpec extends IntegrationSpecCommonBase with DefaultPl
       val invalidData = Json.arr()
 
       running(app) {
-
-        val dbInsertResult = repository.insert(invalidData, correlationId, sentToSdes = false).futureValue
-
-        dbInsertResult.toOption mustBe empty
+        repository.insert(invalidData, correlationId) foreach {
+          _.toOption mustBe empty
+        }
       }
+
     }
   }
 }

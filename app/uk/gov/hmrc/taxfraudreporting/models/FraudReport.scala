@@ -16,17 +16,16 @@
 
 package uk.gov.hmrc.taxfraudreporting.models
 
-import play.api.libs.json.{JsValue, Json, OFormat}
+import play.api.libs.json._
 
 import java.time.LocalDateTime
 
 case class FraudReport(
   _id: FraudReference,
-  sentToSdes: Boolean,
-  isProcessed: Boolean,
   correlationId: String,
   body: JsValue,
-  submitted: LocalDateTime
+  submitted: LocalDateTime,
+  status: FraudReportStatus = FraudReportStatus.Received
 )
 
 object FraudReport {

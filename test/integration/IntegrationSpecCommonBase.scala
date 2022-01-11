@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxfraudreporting.integration
+package integration
 
 import com.codahale.metrics.SharedMetricRegistries
 import org.scalatest.matchers.should.Matchers

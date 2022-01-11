@@ -29,7 +29,7 @@ class FraudReportControllerSpec extends AnyWordSpec with Matchers {
 
   "POST /create-report" should {
     val postFraudReportURL =
-      uk.gov.hmrc.taxfraudreporting.controllers.routes.FraudReportController.postFraudReport().url
+      uk.gov.hmrc.taxfraudreporting.controllers.routes.FraudReportController.createFraudReport().url
 
     def mockJsonRequest(data: JsValue, withCid: Boolean = true) = {
       val req = FakeRequest("Post", postFraudReportURL) withBody data withHeaders "Content-Type" -> "application/json"
@@ -48,15 +48,15 @@ class FraudReportControllerSpec extends AnyWordSpec with Matchers {
     "respond 202 Accepted given a valid fraud report" in {
       val controller = new FraudReportController(stubControllerComponents(), succeedingRepo)
 
-      val result = controller.postFraudReport(requestWithObj)
-      status(result) shouldBe ACCEPTED
+      val result = controller.createFraudReport(requestWithObj)
+      status(result) shouldBe CREATED
     }
 
     "respond 400 Bad Request when given an invalid fraud report" in {
       val failingRepo = new MockFraudReportRepository(false)
       val controller  = new FraudReportController(stubControllerComponents(), failingRepo)
 
-      val result = controller.postFraudReport(requestWithObj)
+      val result = controller.createFraudReport(requestWithObj)
       status(result) shouldBe BAD_REQUEST
     }
 
@@ -64,7 +64,7 @@ class FraudReportControllerSpec extends AnyWordSpec with Matchers {
       val requestSansCid = mockJsonRequest(Json.arr(), withCid = false)
       val controller     = new FraudReportController(stubControllerComponents(), succeedingRepo)
 
-      val result = controller.postFraudReport(requestSansCid)
+      val result = controller.createFraudReport(requestSansCid)
       status(result) shouldBe BAD_REQUEST
     }
   }

@@ -27,8 +27,6 @@ class FraudReportMapperSpec extends AnyWordSpec with Matchers with TestData {
 
   val firstReport: FraudReport = FraudReport(
     _id = FraudReference(1),
-    sentToSdes = false,
-    isProcessed = false,
     correlationId = "XXX",
     body = fraudReportBody,
     submitted = LocalDateTime.of(2017, Month.JANUARY, 1, 22, 20, 30)
@@ -36,8 +34,6 @@ class FraudReportMapperSpec extends AnyWordSpec with Matchers with TestData {
 
   val secondReport: FraudReport = FraudReport(
     _id = FraudReference(1),
-    sentToSdes = false,
-    isProcessed = false,
     correlationId = "XXX",
     body = mandatoryFieldsFraudReportBody,
     submitted = LocalDateTime.of(2017, Month.JANUARY, 1, 22, 20, 30)

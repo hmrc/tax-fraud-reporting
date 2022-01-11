@@ -31,13 +31,13 @@ class FraudReportController @Inject() (cc: ControllerComponents, repository: Fra
 
   val CorrelationIdKey = "X-Correlation-ID"
 
-  def postFraudReport: Action[JsValue] = Action.async(parse.json) { request =>
+  def createFraudReport: Action[JsValue] = Action.async(parse.json) { request =>
     request.headers.get(CorrelationIdKey) match {
       case Some(correlation_id) =>
-        repository.insert(request.body, correlation_id, sentToSdes = false) map { result =>
+        repository.insert(request.body, correlation_id) map { result =>
           result.fold(
-            errors => BadRequest(Json.obj("errors" -> Json.toJson(errors))),
-            _ => Accepted(Json parse """{"success": "Fraud report submitted"}""")
+            errors => BadRequest(Json.obj("errors" -> Json.arr(errors))),
+            _ => Created(Json.obj("success" -> "Fraud report submitted"))
           )
         }
       case None =>

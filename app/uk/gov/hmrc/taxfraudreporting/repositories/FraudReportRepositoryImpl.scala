@@ -17,13 +17,14 @@
 package uk.gov.hmrc.taxfraudreporting.repositories
 
 import com.google.inject.{Inject, Singleton}
-import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model.Indexes.ascending
+import org.mongodb.scala.model.Updates.set
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
-import uk.gov.hmrc.taxfraudreporting.models.{FraudReference, FraudReport}
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import uk.gov.hmrc.taxfraudreporting.models.{FraudReference, FraudReport, FraudReportStatus}
 import uk.gov.hmrc.taxfraudreporting.services.JsonValidationService
 
 import java.time.LocalDateTime
@@ -39,27 +40,18 @@ class FraudReportRepositoryImpl @Inject() (
       collectionName = "fraud-reports",
       mongoComponent = mongoComponent,
       domainFormat = FraudReport.format,
-      indexes = Seq(
-        IndexModel(ascending("sentToSdes"), IndexOptions().name("fraud-reports-sent-to-sdes")),
-        IndexModel(ascending("isProcessed"), IndexOptions().name("processed-fraud-reports"))
-      )
+      indexes = Seq(IndexModel(ascending("status"), IndexOptions().name("fraud-report-status")))
     ) with FraudReportRepository {
 
   private val validator = validationService getValidator "fraud-report.schema"
 
-  def insert(
-    fraudReportBody: JsValue,
-    correlationId: String,
-    sentToSdes: Boolean
-  ): Future[Either[List[String], FraudReport]] =
+  def insert(reportBody: JsValue, reportId: String): Future[Either[List[String], FraudReport]] =
     fraudReferenceService.nextChargeReference() flatMap {
-      id =>
-        val validationErrors = validator validate fraudReportBody
+      ref =>
+        val validationErrors = validator validate reportBody
 
         if (validationErrors.isEmpty) {
-
-          val fraudReport =
-            FraudReport(id, sentToSdes, isProcessed = false, correlationId, fraudReportBody, LocalDateTime.now())
+          val fraudReport = FraudReport(ref, reportId, reportBody, LocalDateTime.now())
 
           collection.insertOne(fraudReport).toFuture() map { _ => Right(fraudReport) }
         } else
@@ -69,7 +61,12 @@ class FraudReportRepositoryImpl @Inject() (
   def get(id: FraudReference): Future[Option[FraudReport]] =
     collection.find(equal("_id", id.toString)).first().toFutureOption()
 
+  def update(id: FraudReference, status: FraudReportStatus): Future[Option[FraudReport]] =
+    collection.findOneAndUpdate(equal("_id", id.toString), set("status", status.toString)).toFutureOption()
+
   def remove(id: FraudReference): Future[Option[FraudReport]] =
-    collection.findOneAndDelete(equal("_id", Codecs.toBson(id))).headOption()
+    collection.findOneAndDelete(
+      and(equal("_id", id.toString), equal("status", FraudReportStatus.Processed.toString))
+    ).headOption
 
 }
