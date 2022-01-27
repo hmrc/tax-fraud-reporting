@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxfraudreporting.xml.models
 
+import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.taxfraudreporting.xml.util.FraudReportXml
 
 import scala.xml.Elem
@@ -28,7 +29,7 @@ case class Reporter(
   memorable_Word: Option[String] = None
 ) extends FraudReportXml {
 
-  override def toXml: Elem =
+  def toXml: Elem =
     <reporter>
       {optionToXml(forename, Some("forename"))}
       {optionToXml(surname, Some("surname"))}
@@ -37,4 +38,8 @@ case class Reporter(
       {optionToXml(memorable_Word, Some("memorable_Word"))}
     </reporter>
 
+}
+
+object Reporter {
+  implicit val reads: Reads[Reporter] = Json.reads
 }

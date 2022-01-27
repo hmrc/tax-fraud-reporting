@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxfraudreporting.mocks
 
+import org.mongodb.scala.FindObservable
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.taxfraudreporting.models.{FraudReference, FraudReport}
 import uk.gov.hmrc.taxfraudreporting.repositories.FraudReportRepository
@@ -37,4 +38,5 @@ class MockFraudReportRepository(succeeding: Boolean) extends FraudReportReposito
 
   def remove(id: FraudReference): Future[Option[FraudReport]] = null
 
+  def listUnsent: FindObservable[FraudReport] = null
 }

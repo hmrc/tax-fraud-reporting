@@ -16,10 +16,8 @@
 
 package uk.gov.hmrc.taxfraudreporting.models
 
-import play.api.libs.json.{__, JsError, JsString, JsSuccess, Reads, Writes}
+import play.api.libs.json._
 import play.api.mvc.PathBindable
-
-import scala.collection.Map
 
 final case class FraudReference(value: Int) {
 
@@ -37,7 +35,7 @@ final case class FraudReference(value: Int) {
       case (a, b) => a * b
     }.sum % 23
 
-    FraudReference.checkCharacterMap(remainder)
+    FraudReference.checkCharacters(remainder)
   }
 
 }
@@ -58,55 +56,26 @@ object FraudReference {
       None
   }
 
-  implicit lazy val reads: Reads[FraudReference] =
-    __.read[String] flatMap { referenceString =>
-      Reads { _ =>
-        apply(referenceString) match {
-          case Some(ref) => JsSuccess(ref)
-          case None      => JsError("Invalid charge reference")
-        }
+  implicit lazy val format: Format[FraudReference] = Format(
+    _.validate[String] flatMap {
+      apply(_) match {
+        case Some(reference) => JsSuccess(reference)
+        case None            => JsError("Invalid reference")
       }
-    }
-
-  implicit lazy val writes: Writes[FraudReference] =
-    Writes { fraudReference =>
-      JsString(fraudReference.toString)
-    }
+    },
+    reference => JsString(reference.toString)
+  )
 
   implicit def pathBindable: PathBindable[FraudReference] = new PathBindable[FraudReference] {
 
-    override def bind(key: String, value: String): Either[String, FraudReference] =
-      FraudReference.apply(value).toRight("Invalid charge reference")
+    def bind(key: String, value: String): Either[String, FraudReference] =
+      FraudReference(value) toRight "Invalid reference"
 
-    override def unbind(key: String, value: FraudReference): String =
+    def unbind(key: String, value: FraudReference): String =
       value.toString
 
   }
 
-  private val checkCharacterMap = Map(
-    0  -> 'A',
-    1  -> 'B',
-    2  -> 'C',
-    3  -> 'D',
-    4  -> 'E',
-    5  -> 'F',
-    6  -> 'G',
-    7  -> 'H',
-    8  -> 'X',
-    9  -> 'J',
-    10 -> 'K',
-    11 -> 'L',
-    12 -> 'M',
-    13 -> 'N',
-    14 -> 'Y',
-    15 -> 'P',
-    16 -> 'Q',
-    17 -> 'R',
-    18 -> 'S',
-    19 -> 'T',
-    20 -> 'Z',
-    21 -> 'V',
-    22 -> 'W'
-  )
+  private val checkCharacters = ('A' to 'H') ++ "X" ++ ('J' to 'N') ++ "Y" ++ ('P' to 'T') ++ "ZVW"
 
 }

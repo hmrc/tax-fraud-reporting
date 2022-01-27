@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxfraudreporting.repositories
 
 import com.google.inject.{Inject, Singleton}
+import org.mongodb.scala.FindObservable
 import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.Updates.set
@@ -24,6 +25,7 @@ import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import uk.gov.hmrc.taxfraudreporting.models.FraudReportStatus.Received
 import uk.gov.hmrc.taxfraudreporting.models.{FraudReference, FraudReport, FraudReportStatus}
 import uk.gov.hmrc.taxfraudreporting.services.JsonValidationService
 
@@ -68,5 +70,8 @@ class FraudReportRepositoryImpl @Inject() (
     collection.findOneAndDelete(
       and(equal("_id", id.toString), equal("status", FraudReportStatus.Processed.toString))
     ).headOption
+
+  def listUnsent: FindObservable[FraudReport] =
+    collection.find(equal("status", Received.toString))
 
 }

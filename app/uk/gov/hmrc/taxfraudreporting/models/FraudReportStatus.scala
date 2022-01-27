@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.taxfraudreporting.models
 
-import play.api.libs.json.{JsString, JsSuccess, Reads, Writes}
-import uk.gov.hmrc.taxfraudreporting.models.FraudReportStatusJsError.{InvalidJsStringValue, InvalidJsValueSubtype}
+import play.api.libs.json.{Format, JsError, JsString, JsSuccess}
 
 sealed abstract class FraudReportStatus
 
@@ -29,16 +28,16 @@ object FraudReportStatus {
 
   val values: List[FraudReportStatus] = List(Received, Sent, Processed, Failed)
 
-  implicit val reads: Reads[FraudReportStatus] = Reads {
-    case JsString(value) =>
-      values find { _.toString == value } match {
+  implicit val format: Format[FraudReportStatus] = Format(
+    _.validate[String] flatMap { value =>
+      values find {
+        _.toString == value
+      } match {
         case Some(status) => JsSuccess(status)
-        case None         => InvalidJsStringValue
+        case None         => JsError("Invalid JsString value")
       }
-    case _ => InvalidJsValueSubtype
-  }
-
-  implicit val writes: Writes[FraudReportStatus] =
-    Writes(status => JsString(status.toString))
+    },
+    status => JsString(status.toString)
+  )
 
 }

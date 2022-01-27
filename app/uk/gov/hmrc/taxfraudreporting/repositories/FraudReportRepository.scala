@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxfraudreporting.repositories
 
 import com.google.inject.ImplementedBy
+import org.mongodb.scala.FindObservable
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.taxfraudreporting.models.{FraudReference, FraudReport}
 
@@ -31,4 +32,5 @@ trait FraudReportRepository {
 
   def remove(id: FraudReference): Future[Option[FraudReport]]
 
+  def listUnsent: FindObservable[FraudReport]
 }

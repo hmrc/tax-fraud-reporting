@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxfraudreporting.data_formats
+package integration
 
-import play.api.libs.json.{Json, Reads}
-
-case class EvasionData(evasionCategory: String, fraudLocation: Address, reportedBy: String)
-
-object EvasionData {
-  implicit val reads: Reads[EvasionData] = Json.reads
+class FraudReportStorageWorkerSpec extends IntegrationSpecCommonBase {
+  "Fraud report streamer" must {}
 }

@@ -18,60 +18,13 @@ package uk.gov.hmrc.taxfraudreporting.xml.mapping
 
 import play.api.libs.json.JsValue.jsValueToJsLookup
 import play.api.libs.json._
-import uk.gov.hmrc.taxfraudreporting.models.FraudReport
 import uk.gov.hmrc.taxfraudreporting.xml.models._
 
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import scala.language.implicitConversions
 
 object FraudReportMapper {
 
   implicit def toOpt[A](a: A): Option[A] = Some(a)
-
-  def getXmlFraudReports(data: Seq[FraudReport]): FraudReports = {
-
-    val fileHeader = getFileHeader(data)
-
-    val fileBodies: Seq[FileBody] = data map getFileBody
-
-    FraudReports(fileHeader, fileBodies)
-  }
-
-  def getFileHeader(data: Seq[FraudReport]): FileHeader = {
-    val timeNow                     = LocalDateTime.now()
-    def now(format: String): String = timeNow.format(DateTimeFormatter.ofPattern(format))
-
-    FileHeader(
-      sending_System = "Digital RIS Fraud Reporting",
-      receiving_System = "EVI BDApp",
-      extract_Date_Time = now("dd/MM/yyyy HH:mm:ss"),
-      filename =
-        s"DIGITAL_EVIBDAPP_${now("yyyyMMddHHmm")}_FRAUD_REPORTS.xml", //Fine name can be moved out & get as input from scheduler job
-      num_Reports = data.size.toString,
-      file_Version = "0.1"
-    )
-
-  }
-
-  def getFileBody(data: FraudReport): FileBody = {
-    val jsonData = jsValueToJsLookup(data.body)
-
-    FileBody(
-      report_Number = data._id.toString,
-      digital_ID = data._id.toString, //Need to confirm with business
-      data.submitted.format(DateTimeFormatter ofPattern "dd/MM/yyyy HH:mm:ss"),
-      (jsonData \ "activity_Type").as[String],
-      getNominal(jsonData),
-      (jsonData \ "value_Fraud").as[String],
-      (jsonData \ "value_Fraud_Band").asOpt[String],
-      (jsonData \ "duration_Fraud").as[String],
-      (jsonData \ "how_Many_Knew").as[String],
-      (jsonData \ "additional_Details").asOpt[String],
-      getReporter(jsonData \ "reporter"),
-      (jsonData \ "supporting_Evidence").asOpt[Boolean]
-    )
-  }
 
   def getNominal(data: JsLookup): Nominals = {
 

@@ -20,42 +20,27 @@ import org.scalacheck.Gen
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
-import play.api.libs.json.{JsNumber, JsString, JsSuccess, JsValue, Json}
-import uk.gov.hmrc.taxfraudreporting.models.FraudReportStatusJsError.{InvalidJsStringValue, InvalidJsValueSubtype}
+import play.api.libs.json._
 
 class FraudReportStatusSpec extends AnyFlatSpec with Matchers {
-  private val writtenStrings  = FraudReportStatus.values map Json.toJson[FraudReportStatus]
-  private val expectedStrings = List("Received", "Sent", "Processed", "Failed")
 
-  "FraudStatusSpec enum" should "result in JsError when read from JS non-strings" in {
-    val jsValues: List[JsValue] = List(Json.obj(), Json.arr(), JsNumber(1234))
+  private def assertIsInvalid(jsValue: JsValue) =
+    assert(jsValue.validate[FraudReportStatus].isError)
 
-    jsValues foreach { jsValue =>
-      val jsResult = jsValue.validate[FraudReportStatus]
-      jsResult shouldBe InvalidJsValueSubtype
-    }
+  "FraudReportStatus enum" should "give a JsError when reading a non-JsString" in {
+    val invalidJsValues = List(Json.obj(), Json.arr())
+
+    invalidJsValues foreach assertIsInvalid
   }
 
-  it should "also result in a JsError when read from an invalid string" in {
-    val invalidJsStrings = Gen.alphaStr suchThat { str => !(expectedStrings contains str) } map JsString
+  it should "give a JsError when reading an invalid string" in {
+    val validStrings     = FraudReportStatus.values.map(_.toString)
+    val invalidJsStrings = Gen.alphaStr suchThat { str => !(validStrings contains str) } map JsString
 
-    forAll(invalidJsStrings) { jsString =>
-      val jsResult = jsString.validate[FraudReportStatus]
-
-      jsResult shouldBe InvalidJsStringValue
-    }
+    forAll(invalidJsStrings)(assertIsInvalid)
   }
 
-  it should "be writeable to the correct JSON strings" in {
-    writtenStrings zip expectedStrings foreach {
-      case (fraudReportStatus, expectedString) =>
-        val JsString(writtenString) = Json toJson fraudReportStatus
-
-        writtenString shouldBe expectedString
-    }
-  }
-
-  it should "be recoverable by reading after writing" in {
+  it should "treat JS Reads and Writes functions as inverses" in {
     FraudReportStatus.values foreach { listedValue =>
       val JsSuccess(recoveredValue, _) = Json.toJson(listedValue).validate[FraudReportStatus]
 
