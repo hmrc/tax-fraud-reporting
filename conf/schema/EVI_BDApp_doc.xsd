@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
-	<xs:element name="evi_BDApp_Doc" type="EVI_BDApp_Doc"/>
+	<xs:element name="reports" type="reports"/>
 
-	<xs:complexType name="EVI_BDApp_Doc">
+	<xs:complexType name="reports">
+		<xs:sequence>
+			<xs:element name="fileHeader" type="FileHeader"/>
+			<xs:element name="report" minOccurs="1" maxOccurs="unbounded" type="FraudReport"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="FileHeader">
 		<xs:sequence>
 			<xs:element name="sending_System" type="xs:string" fixed="RIS Fraud Reporting"/>
 			<xs:element name="receiving_System" type="xs:string" fixed="EVI BDApp"/>
@@ -22,13 +29,6 @@
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
-			<xs:element name="reports" minOccurs="0">
-				<xs:complexType>
-					<xs:sequence>
-						<xs:element name="report" type="FraudReport" maxOccurs="5"/>
-					</xs:sequence>
-				</xs:complexType>
-			</xs:element>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -37,7 +37,7 @@
 			<xs:element name="report_Number" type="ReportNumber"/>
 			<xs:element name="digital_ID" type="String50"/>
 			<xs:element name="submitted" type="DateTime"/>
-			<xs:element name="activity_Type" type="ActivityType"/>
+			<xs:element name="activity_Type" type="String255"/>
 			<xs:element name="nominals">
 				<xs:complexType>
 					<xs:sequence>
@@ -59,42 +59,9 @@
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
-			<xs:element name="value_Fraud_Band" minOccurs="0">
-				<xs:simpleType>
-					<xs:restriction base="xs:unsignedByte">
-						<xs:pattern value="[1-5]"/>
-					</xs:restriction>
-				</xs:simpleType>
-			</xs:element>
-			<xs:element name="duration_Fraud">
-				<xs:simpleType>
-					<xs:restriction base="xs:string">
-						<xs:enumeration value="Over 5 years"/>
-						<xs:enumeration value="Between 1 and 5 years"/>
-						<xs:enumeration value="Between 6 months and 1 year ago"/>
-						<xs:enumeration value="In the last 6 months"/>
-						<xs:enumeration value="It only happened once"/>
-						<xs:enumeration value="It’s going to happen in the future"/>
-						<xs:enumeration value="I don’t know"/>
-					</xs:restriction>
-				</xs:simpleType>
-			</xs:element>
-			<xs:element name="how_Many_Know">
-				<xs:simpleType>
-					<xs:union>
-						<xs:simpleType>
-							<xs:restriction base="xs:unsignedLong">
-								<xs:maxInclusive value="999999999999"/>
-							</xs:restriction>
-						</xs:simpleType>
-						<xs:simpleType>
-							<xs:restriction base="xs:string">
-								<xs:pattern value="I don't know"/>
-							</xs:restriction>
-						</xs:simpleType>
-					</xs:union>
-				</xs:simpleType>
-			</xs:element>
+			<xs:element name="value_Fraud_Band" minOccurs="0" type="String255"/>
+			<xs:element name="duration_Fraud" type="String255"/>
+			<xs:element name="how_Many_Know" type="String255"/>
 			<xs:element name="additional_Details">
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
@@ -113,14 +80,7 @@
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
-			<xs:element name="supporting_Evidence">
-				<xs:simpleType>
-					<xs:restriction base="xs:token">
-						<xs:enumeration value="T"/>
-						<xs:enumeration value="F"/>
-					</xs:restriction>
-				</xs:simpleType>
-			</xs:element>
+			<xs:element name="supporting_Evidence" type="xs:boolean"/>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -152,7 +112,7 @@
 						<xs:element name="age">
 							<xs:simpleType>
 								<xs:restriction base="xs:int">
-									<xs:minInclusive value="18"/>
+									<xs:minInclusive value="0"/>
 									<xs:maxInclusive value="120"/>
 								</xs:restriction>
 							</xs:simpleType>
@@ -178,39 +138,25 @@
 			<xs:element name="employeeCount" type="xs:unsignedInt" minOccurs="0"/>
 			<xs:element name="address" type="Address" minOccurs="0"/>
 			<xs:element name="contact" type="Contact" minOccurs="0"/>
-			<xs:element name="connection_Type" minOccurs="0">
-				<xs:simpleType>
-					<xs:restriction base="xs:string">
-						<xs:enumeration value="My employer"/>
-						<xs:enumeration value="My business competitor"/>
-						<xs:enumeration value="My client"/>
-						<xs:enumeration value="My supplier"/>
-						<xs:enumeration value="I am a customer"/>
-						<xs:enumeration value="I am an accountant"/>
-						<xs:enumeration value="I am a tax adviser"/>
-						<xs:enumeration value="I am an auditor"/>
-						<xs:enumeration value="I am a treasurer"/>
-					</xs:restriction>
-				</xs:simpleType>
-			</xs:element>
+			<xs:element name="connection_Type" type="String255"/>
 			<xs:element name="VAT_Number" minOccurs="0">
 				<xs:simpleType>
 					<xs:restriction base="xs:token">
-						<xs:pattern value="([A-Z]{2})?\d{10}"/>
+						<xs:pattern value="([A-Z]{2})?\d{10}|"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
 			<xs:element name="ct_Utr" minOccurs="0">
 				<xs:simpleType>
-					<xs:restriction base="xs:int">
-						<xs:pattern value="\d{10}"/>
+					<xs:restriction base="xs:token">
+						<xs:pattern value="\d{10}|"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
 			<xs:element name="employee_Number" minOccurs="0">
 				<xs:simpleType>
-					<xs:restriction base="xs:string">
-						<xs:pattern value="\d{3}/[A-Z]{2}\d{3,5}"/>
+					<xs:restriction base="xs:token">
+						<xs:pattern value="\d{3}/[A-Z]{2}\d{3,5}|"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
@@ -224,19 +170,11 @@
 			<xs:element name="address_Line_2" type="String255" minOccurs="0"/>
 			<xs:element name="address_Line_3" type="String255" minOccurs="0"/>
 			<xs:element name="town_City" type="String255" minOccurs="0"/>
-			<xs:element name="postcode" type="PostCode" minOccurs="0"/>
+			<xs:element name="postcode" type="String255" minOccurs="0"/>
 			<xs:element name="country" type="String255" minOccurs="0"/>
 			<xs:element name="general_Location" type="String255" minOccurs="0"/>
 		</xs:sequence>
 	</xs:complexType>
-
-	<xs:simpleType name="PostCode">
-		<xs:restriction base="xs:token">
-			<!-- Regex obtained from https://webarchive.nationalarchives.gov.uk/ukgwa/+/http://www.cabinetoffice.gov.uk/media/291370/bs7666-v2-0-xsd-PostCodeType.htm -->
-			<xs:pattern
-							value="(GIR 0AA)|((([A-PR-UWYZ]\d{1,2})|(([A-PR-UWYZ][A-HK-Y]\d{1,2})|(([A-PR-UWYZ]\d[A-HJKSTUW])|([A-PR-UWYZ][A-HK-Y]\d[ABEHMNPRVWXY])))) \d[ABD-HJLNP-UW-Z]{2})"/>
-		</xs:restriction>
-	</xs:simpleType>
 
 	<xs:complexType name="Contact">
 		<xs:sequence>
@@ -249,8 +187,7 @@
 	<xs:simpleType name="Email">
 		<xs:restriction base="xs:string">
 			<!-- Regex obtained from https://html.spec.whatwg.org/multipage/input.html#email-state-(type=email) -->
-			<xs:pattern
-							value="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"/>
+			<xs:pattern value="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|"/>
 		</xs:restriction>
 	</xs:simpleType>
 
@@ -266,15 +203,6 @@
 		</xs:restriction>
 	</xs:simpleType>
 
-	<!-- Begin ActivityType enum -->
-	<!-- TODO: add the rest of the activity types -->
-	<xs:simpleType name="ActivityType">
-		<xs:restriction base="xs:token">
-			<xs:enumeration value="Fuel Tax"/>
-			<xs:enumeration value="CJRS"/>
-			<xs:enumeration value="Fraud related to VAT"/>
-		</xs:restriction>
-	</xs:simpleType>
 	<!-- End ActivityType enum -->
 
 	<!-- Begin metadata types -->
