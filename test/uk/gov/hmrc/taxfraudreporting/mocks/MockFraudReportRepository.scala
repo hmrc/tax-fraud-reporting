@@ -26,10 +26,10 @@ import scala.concurrent.Future
 
 class MockFraudReportRepository(succeeding: Boolean) extends FraudReportRepository {
 
-  def insert(data: JsValue, reportId: String): Future[Either[List[String], FraudReport]] =
+  def insert(data: JsValue): Future[Either[List[String], FraudReport]] =
     Future.successful {
       if (succeeding)
-        Right(FraudReport(FraudReference(0), "", data, LocalDateTime.now()))
+        Right(FraudReport(FraudReference(0), data, LocalDateTime.now()))
       else
         Left(List("Invalid JSON"))
     }

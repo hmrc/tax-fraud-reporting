@@ -71,12 +71,11 @@ class FraudReportRepositorySpec extends IntegrationSpecCommonBase with DefaultPl
 
         running(app) {
 
-          val document = repository.insert(inputData, correlationId).futureValue.right.get
+          val document = repository.insert(inputData).futureValue.right.get
 
           inside(document) {
-            case FraudReport(_id, cid, body, _, _) =>
+            case FraudReport(_id, body, _, _, _) =>
               _id mustEqual document._id
-              cid mustEqual correlationId
               body mustEqual inputData
 
               repository.update(document._id, FraudReportStatus.Processed).futureValue
@@ -91,7 +90,7 @@ class FraudReportRepositorySpec extends IntegrationSpecCommonBase with DefaultPl
       val invalidData = Json.arr()
 
       running(app) {
-        repository.insert(invalidData, correlationId) foreach {
+        repository.insert(invalidData) foreach {
           _.toOption mustBe empty
         }
       }

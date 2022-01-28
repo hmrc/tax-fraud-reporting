@@ -22,28 +22,19 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.taxfraudreporting.repositories.FraudReportRepository
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton()
 class FraudReportController @Inject() (cc: ControllerComponents, repository: FraudReportRepository)(implicit
   executionContext: ExecutionContext
 ) extends BackendController(cc) {
 
-  val CorrelationIdKey = "X-Correlation-ID"
-
   def createFraudReport: Action[JsValue] = Action.async(parse.json) { request =>
-    request.headers.get(CorrelationIdKey) match {
-      case Some(correlation_id) =>
-        repository.insert(request.body, correlation_id) map { result =>
-          result.fold(
-            errors => BadRequest(Json.obj("errors" -> Json.arr(errors))),
-            _ => Created(Json.obj("success" -> "Fraud report submitted"))
-          )
-        }
-      case None =>
-        Future.successful {
-          BadRequest(Json.obj("errors" -> Json.arr("Missing X-Correlation-ID header")))
-        }
+    repository.insert(request.body) map { result =>
+      result.fold(
+        errors => BadRequest(Json.obj("errors" -> Json.arr(errors))),
+        _ => Created(Json.obj("success" -> "Fraud report submitted"))
+      )
     }
   }
 

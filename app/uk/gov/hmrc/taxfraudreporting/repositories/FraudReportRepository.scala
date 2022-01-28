@@ -26,7 +26,7 @@ import scala.concurrent.Future
 @ImplementedBy(classOf[FraudReportRepositoryImpl])
 trait FraudReportRepository {
 
-  def insert(data: JsValue, id: String): Future[Either[List[String], FraudReport]]
+  def insert(data: JsValue): Future[Either[List[String], FraudReport]]
 
   def get(id: FraudReference): Future[Option[FraudReport]]
 

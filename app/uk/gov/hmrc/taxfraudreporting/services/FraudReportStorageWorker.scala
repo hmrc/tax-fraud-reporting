@@ -32,6 +32,7 @@ import uk.gov.hmrc.taxfraudreporting.repositories.FraudReportRepository
 
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, LocalDateTime, LocalTime, ZoneOffset}
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{DurationInt, DurationLong}
@@ -52,36 +53,38 @@ class FraudReportStorageWorker @Inject() (
   private val path           = Path Directory configured("path")
   private val fileNameFormat = configured("file.nameFormat")
   private val xmlTag         = configured("file.rootElement")
-  private val interval       = 86400 / configured("frequency").toInt
-  private val timeOfJob      = LocalTime parse configured("timeOfJob")
+
+  private val daySecs = 86400
+
+  private val interval  = daySecs / configured("frequency").toInt
+  private val timeOfJob = LocalTime parse configured("timeOfJob")
 
   private val jobEpoch = LocalDate.now() atTime timeOfJob toEpochSecond ZoneOffset.UTC
   private val nowEpoch = LocalDateTime.now() toEpochSecond ZoneOffset.UTC
+  private val delay    = (jobEpoch - nowEpoch + daySecs) % interval
 
-  private val timeDiffs = Stream.iterate(jobEpoch - nowEpoch)(_ + interval)
-  private val delay     = timeDiffs dropWhile { _ <= 0 } head
+  private def contentSource(correlationID: UUID, extractTime: LocalDateTime) = Source fromGraph GraphDSL.create() {
+    implicit builder =>
+      import GraphDSL.Implicits._
 
-  private def contentSource(extractTime: LocalDateTime) = Source fromGraph GraphDSL.create() { implicit builder =>
-    import GraphDSL.Implicits._
+      val bCast  = builder add Broadcast[FraudReport](2)
+      val concat = builder add Concat[String](4)
 
-    val bCast  = builder add Broadcast[FraudReport](2)
-    val concat = builder add Concat[String](4)
+      Source.single(s"""<?xml version="1.0" encoding="UTF-8"?><$xmlTag>""") ~> concat.in(0)
 
-    Source.single(s"""<?xml version="1.0" encoding="UTF-8"?><$xmlTag>""") ~> concat.in(0)
+      Source.fromPublisher(fraudReportRepository.listUnsent) ~> bCast.in
 
-    Source.fromPublisher(fraudReportRepository.listUnsent) ~> bCast.in
+      bCast.out(0)
+        .fold(0)((acc, _) => acc + 1)
+        .map(xmlElementFactory.getFileHeader(correlationID, extractTime, _).toString) ~> concat.in(1)
 
-    bCast.out(0)
-      .fold(0)((acc, _) => acc + 1)
-      .map(xmlElementFactory.getFileHeader(extractTime, _).toString) ~> concat.in(1)
+      bCast.out(1)
+        .zipWithIndex
+        .map(xmlElementFactory.getReport(_).toString) ~> concat.in(2)
 
-    bCast.out(1)
-      .zipWithIndex
-      .map(xmlElementFactory.getReport(_).toString) ~> concat.in(2)
+      Source.single(s"</$xmlTag>") ~> concat.in(3)
 
-    Source.single(s"</$xmlTag>") ~> concat.in(3)
-
-    SourceShape(concat.out)
+      SourceShape(concat.out)
   } map { ByteString(_) }
 
   logger.info(s"Initialising worker. First job in $delay seconds.")
@@ -90,10 +93,13 @@ class FraudReportStorageWorker @Inject() (
     logger.info("Commencing job.")
 
     LockService(lockRepository, "ris-kana-lock", ttl = 1.hour) withLock {
-      val extractTime = LocalDateTime.now()
-      val fileName    = fileNameFormat.format(extractTime.format(DateTimeFormatter ofPattern "yyyyMMddHHmmss"))
+      val correlationID = UUID.randomUUID()
+      val extractTime   = LocalDateTime.now()
+      val fileName      = fileNameFormat.format(extractTime.format(DateTimeFormatter ofPattern "yyyyMMddHHmm"))
 
-      objectStoreClient.putObject(path file fileName, contentSource(extractTime))
+      logger.info(s"Storing object $fileName.")
+
+      objectStoreClient.putObject(path file fileName, contentSource(correlationID, extractTime))
     } foreach {
       case Some(summary) => logger.info(s"Stored object: ${summary.contentMd5}.")
       case None          => logger.info("Lock not acquired.")

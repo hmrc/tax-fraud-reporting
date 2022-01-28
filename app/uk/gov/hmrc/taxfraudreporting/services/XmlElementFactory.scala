@@ -23,6 +23,7 @@ import uk.gov.hmrc.taxfraudreporting.xml.models.Reporter
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 
 @Singleton
@@ -31,10 +32,11 @@ case class XmlElementFactory @Inject() (servicesConfig: ServicesConfig) {
 
   private val timePattern = "dd/MM/yyyy HH:mm:ss"
 
-  def getFileHeader(dateTime: LocalDateTime, numOfReports: Int): xml.Elem = {
+  def getFileHeader(correlationID: UUID, dateTime: LocalDateTime, numOfReports: Int): xml.Elem = {
     def timestamp(format: String) = dateTime.format(DateTimeFormatter ofPattern format)
 
     <fileHeader>
+      <correlation_Id>{correlationID}</correlation_Id>
       <sending_System> {configured("sendingSystem")} </sending_System>
       <receiving_System> {configured("receivingSystem")} </receiving_System>
       <extract_Date_Time> {timestamp(timePattern)} </extract_Date_Time>
@@ -47,7 +49,7 @@ case class XmlElementFactory @Inject() (servicesConfig: ServicesConfig) {
   private val valueFraudBands = List(25000, 100000, 500000, 1000000)
 
   def getReport(entity: (FraudReport, Long)): xml.Elem = {
-    val (FraudReport(_, correlationId, body, submitted, _), reportNumber) = entity
+    val (FraudReport(_, body, submitted, _, _), reportNumber) = entity
 
     val timeStamp = submitted.format(DateTimeFormatter ofPattern timePattern)
 
@@ -60,7 +62,7 @@ case class XmlElementFactory @Inject() (servicesConfig: ServicesConfig) {
 
     <report>
       <report_Number>{reportNumber + 1}</report_Number>
-      <digital_ID>{correlationId}</digital_ID>
+      <digital_ID>{/* TODO implement this following talk with SDES team */}</digital_ID>
       <submitted>{timeStamp}</submitted>
       <activity_Type>{(body \ "activity_Type").as[String]}</activity_Type>
       {FraudReportMapper.getNominal(body).toXml}

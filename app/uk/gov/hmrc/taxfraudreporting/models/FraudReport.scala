@@ -22,10 +22,10 @@ import java.time.LocalDateTime
 
 case class FraudReport(
   _id: FraudReference,
-  correlationId: String,
   body: JsValue,
   submitted: LocalDateTime,
-  status: FraudReportStatus = FraudReportStatus.Received
+  status: FraudReportStatus = FraudReportStatus.Received,
+  correlationId: Option[String] = None
 )
 
 object FraudReport {

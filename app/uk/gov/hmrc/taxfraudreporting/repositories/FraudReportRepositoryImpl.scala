@@ -47,13 +47,13 @@ class FraudReportRepositoryImpl @Inject() (
 
   private val validator = validationService getValidator "fraud-report.schema"
 
-  def insert(reportBody: JsValue, reportId: String): Future[Either[List[String], FraudReport]] =
+  def insert(reportBody: JsValue): Future[Either[List[String], FraudReport]] =
     fraudReferenceService.nextChargeReference() flatMap {
       ref =>
         val validationErrors = validator validate reportBody
 
         if (validationErrors.isEmpty) {
-          val fraudReport = FraudReport(ref, reportId, reportBody, LocalDateTime.now())
+          val fraudReport = FraudReport(ref, reportBody, LocalDateTime.now())
 
           collection.insertOne(fraudReport).toFuture() map { _ => Right(fraudReport) }
         } else
