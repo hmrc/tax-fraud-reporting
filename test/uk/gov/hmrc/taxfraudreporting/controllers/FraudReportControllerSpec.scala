@@ -21,7 +21,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.taxfraudreporting.mocks.MockFraudReportRepository
+import uk.gov.hmrc.taxfraudreporting.services.MockFraudReportRepository
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 

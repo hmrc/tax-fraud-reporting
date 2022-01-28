@@ -14,16 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxfraudreporting.repositories
+package uk.gov.hmrc.taxfraudreporting.models.xml
 
-import com.google.inject.ImplementedBy
-import uk.gov.hmrc.taxfraudreporting.models.FraudReference
+import scala.language.postfixOps
 
-import scala.concurrent.Future
+trait FraudReportXml {
 
-@ImplementedBy(classOf[SequentialFraudReferenceRepository])
-trait FraudReferenceRepository {
+  def toXml: xml.Elem
 
-  val started: Future[Unit]
-  def nextChargeReference(): Future[FraudReference]
+  def optionToXml[T](opt: Option[T], tag: String): xml.Elem =
+    opt match {
+      case Some(v) if v.toString.trim.nonEmpty =>
+        <xml>{v.toString}</xml>.copy(label = tag)
+      case _ => null
+    }
+
+  def optionToXml(opt: Option[FraudReportXml]): xml.Elem =
+    opt map { _.toXml } orNull
+
 }

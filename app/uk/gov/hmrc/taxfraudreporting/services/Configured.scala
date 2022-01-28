@@ -16,10 +16,21 @@
 
 package uk.gov.hmrc.taxfraudreporting.services
 
-import play.api.Environment
+import play.api.Configuration
 
-import javax.inject.{Inject, Singleton}
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
-@Singleton
-class EviBDAppDocValidator @Inject() (environment: Environment)
-    extends XmlValidator("schema/EVI_BDApp_doc.xsd", environment)
+abstract class Configured(service: String) {
+  val configuration: Configuration
+  val configured: Map[String, String] = configuration.get[Map[String, String]](s"services.$service")
+
+  def getFileName(datetime: LocalDateTime): String = {
+    val fileNameFormat = configuration.get[String]("services.fileNameFormat")
+    val dateTimeFormat = configuration.get[String]("services.dateTimeFormat")
+
+    val timestamp = datetime.format(DateTimeFormatter ofPattern dateTimeFormat)
+    fileNameFormat.format(timestamp)
+  }
+
+}

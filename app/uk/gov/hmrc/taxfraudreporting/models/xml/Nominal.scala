@@ -14,17 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxfraudreporting.models
+package uk.gov.hmrc.taxfraudreporting.models.xml
 
-import play.api.libs.json._
-import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
+import play.api.libs.json.{Json, OFormat}
 
-import java.time.Instant
+import scala.language.postfixOps
 
-final case class FraudReferenceJson(_id: String, reference: Int)
+final case class Nominal(person: Option[Person], business: Option[Business]) {
 
-object FraudReferenceJson {
-  implicit val formatInstant: Format[Instant] = MongoJavatimeFormats.instantFormat
+  def toXml: xml.Elem =
+    <nominal>{
+      person map { _.toXml } orNull
+    }{
+      business map { _.toXml } orNull
+    }</nominal>
 
-  implicit val format: OFormat[FraudReferenceJson] = Json.format
+}
+
+object Nominal {
+  implicit val format: OFormat[Nominal] = Json.format
 }

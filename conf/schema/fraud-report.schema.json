@@ -3,23 +3,23 @@
   "title": "Fraud Report Body",
   "type": "object",
   "properties": {
-    "correlation_ID": {"type": "string"},
+    "correlationID": {"type": "string"},
     "submitted": {"type": "string", "format": "date-time"},
-    "activity_Type": {"$ref": "resource:/schema/activity-type.schema.json"},
-    "Nominals": {
-      "oneOf": [
-        {"$ref": "resource:/schema/business-details.schema.json"},
-        {
-          "type": "array",
-          "items": {"$ref": "resource:/schema/person.schema.json"},
-          "minItems": 1,
-          "maxItems": 5
+    "activityType": {"$ref": "resource:/schema/activity-type.schema.json"},
+    "nominals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "person":   {"$ref": "resource:/schema/person.schema.json"},
+          "business": {"$ref": "resource:/schema/business-details.schema.json"}
         }
-      ]
+      },
+      "minItems": 1,
+      "maxItems": 5
     },
-    "value_Fraud": {"type": "integer", "minimum": 1, "maximum": 9999999999},
-    "value_Fraud_Band": {"type": "string", "pattern": "^[1-5]$"},
-    "duration_Fraud": {
+    "valueFraud": {"type": "integer", "minimum": 1, "maximum": 9999999999},
+    "durationFraud": {
       "type": "string",
       "enum": [
         "Over 5 years",
@@ -30,12 +30,12 @@
         "I don't know"
       ]
     },
-    "anyone_Else_Know": {
+    "anyoneElseKnow": {
       "type": "string",
       "enum": ["Yes", "No", "Don't know", "Prefer not to say"]
     },
-    "how_Many_Know": {"type": "integer", "minimum": 0, "maximum": 999999},
-    "additional_Details": {"type": "string", "maxLength": 1500},
+    "howManyKnow": {"type": "integer", "minimum": 0, "maximum": 999999},
+    "additionalDetails": {"type": "string", "maxLength": 1500},
     "reporter": {
       "type": "object",
       "properties": {
@@ -46,7 +46,7 @@
         "memorable_Word": {"type": "string", "pattern": "^[A-Za-z0-9]*$", "maxLength": 255}
       }
     },
-    "supporting_Evidence": {"type": "boolean"}
+    "supportingEvidence": {"type": "boolean"}
   },
   "additionalProperties": false
 }

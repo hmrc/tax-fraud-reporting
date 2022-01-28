@@ -14,33 +14,35 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxfraudreporting.xml.models
+package uk.gov.hmrc.taxfraudreporting.models.xml
 
-import uk.gov.hmrc.taxfraudreporting.xml.util.FraudReportXml
+import play.api.libs.json.{Json, OFormat}
 
-import scala.xml.Elem
-
-case class Business(
-  business_Name: Option[String] = None,
-  business_Type: Option[String] = None,
+final case class Business(
+  businessName: Option[String] = None,
+  businessType: Option[String] = None,
   address: Option[Address] = None,
   contact: Option[Contact] = None,
-  connection_Type: Option[String] = None,
-  VAT_Number: Option[String] = None,
-  ct_Utr: Option[String] = None,
-  employee_Number: Option[String] = None
+  businessVatNo: Option[String] = None,
+  ctUtr: Option[String] = None,
+  employeeRefNo: Option[String] = None,
+  connectionType: String
 ) extends FraudReportXml {
 
-  override def toXml: Elem =
+  def toXml: xml.Elem =
     <business>
-      {optionToXml(business_Name, Some("business_Name"))}
-      {optionToXml(business_Type, Some("business_Type"))}
+      {optionToXml(businessName, "businessName")}
+      {optionToXml(businessType, "businessType")}
       {optionToXml(address)}
       {optionToXml(contact)}
-      {optionToXml(connection_Type, Some("connection_Type"))}
-      {optionToXml(VAT_Number, Some("VAT_Number"))}
-      {optionToXml(ct_Utr, Some("ct_Utr"))}
-      {optionToXml(employee_Number, Some("employee_Number"))}
+      {optionToXml(businessVatNo, "businessVATNo")}
+      {optionToXml(ctUtr, "ctUTR")}
+      {optionToXml(employeeRefNo, "subjectPAYERef")}
+      <reporterConn>{connectionType}</reporterConn>
     </business>
 
+}
+
+object Business {
+  implicit val format: OFormat[Business] = Json.format
 }

@@ -14,8 +14,27 @@
  * limitations under the License.
  */
 
-package integration
+package uk.gov.hmrc.taxfraudreporting.models.xml
 
-class FraudReportStorageWorkerSpec extends IntegrationSpecCommonBase {
-  "Fraud report streamer" must {}
+import play.api.libs.json.{Json, OFormat}
+
+final case class Name(
+  forename: Option[String] = None,
+  surname: Option[String] = None,
+  middle_Name: Option[String] = None,
+  alias: Option[String] = None
+) extends FraudReportXml {
+
+  def toXml: xml.Elem =
+    <name>
+      {optionToXml(forename, "forename")}
+      {optionToXml(surname, "surname")}
+      {optionToXml(middle_Name, "middle_Name")}
+      {optionToXml(alias, "alias")}
+    </name>
+
+}
+
+object Name {
+  implicit val format: OFormat[Name] = Json.format
 }

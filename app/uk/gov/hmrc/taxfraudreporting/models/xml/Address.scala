@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxfraudreporting.xml.models
+package uk.gov.hmrc.taxfraudreporting.models.xml
 
-import uk.gov.hmrc.taxfraudreporting.xml.util.FraudReportXml
-import scala.xml.Elem
+import play.api.libs.json.{Json, OFormat}
 
-case class Address(
+final case class Address(
   address_Line_1: Option[String] = None,
   address_Line_2: Option[String] = None,
   address_Line_3: Option[String] = None,
@@ -29,15 +28,19 @@ case class Address(
   general_Location: Option[String] = None
 ) extends FraudReportXml {
 
-  override def toXml: Elem =
+  def toXml: xml.Elem =
     <address>
-      {optionToXml(address_Line_1, Some("address_Line_1"))}
-      {optionToXml(address_Line_2, Some("address_Line_2"))}
-      {optionToXml(address_Line_3, Some("address_Line_3"))}
-      {optionToXml(town_City, Some("town_City"))}
-      {optionToXml(postcode, Some("postcode"))}
-      {optionToXml(country, Some("country"))}
-      {optionToXml(general_Location, Some("general_Location"))}
+      {optionToXml(address_Line_1, "address_Line_1")}
+      {optionToXml(address_Line_2, "address_Line_2")}
+      {optionToXml(address_Line_3, "address_Line_3")}
+      {optionToXml(town_City, "town_City")}
+      {optionToXml(postcode, "postcode")}
+      {optionToXml(country, "country")}
+      {optionToXml(general_Location, "general_Location")}
     </address>
 
+}
+
+object Address {
+  implicit val format: OFormat[Address] = Json.format
 }

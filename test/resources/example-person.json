@@ -1,40 +1,18 @@
 {
-  "correlation_ID": "e18518f6-1f2c-4c63-9884-0fc1e10ea329",
+  "correlationID": "e18518f6-1f2c-4c63-9884-0fc1e10ea329",
   "submitted": "2021-08-20T14:29:10Z",
-  "activity_Type": "Oils/Fuels",
-  "Nominals": [
+  "activityType": "Oils/Fuels",
+  "nominals": [
     {
-      "name": {
-        "forename": "Shine",
-        "surname": "Alex",
-        "middle_Name": "",
-        "alias": ""
-      },
-      "address": {
-        "address_Line_1": "",
-        "address_Line_2": "",
-        "address_Line_3": "",
-        "town_City": "",
-        "postcode": "EH12 9JE",
-        "country": "",
-        "general_Location": ""
-      },
-      "contact": {
-        "landline_Number": "01234 567890",
-        "mobile_Number": "01234 567890",
-        "email_Address": "shine.alex@digital.hmrc.gov.uk"
-      },
-      "connection": {
-        "connection_Type": "Partner",
-        "current_Connection": true
-      },
-      "niNumber": "AB 12 34 56 C",
-      "business": {
-        "business_Name": "",
-        "business_Type": "",
-        "employee_Count": 100,
+      "person": {
+        "name": {
+          "forename": "Shine",
+          "surname": "Alex",
+          "middle_Name": "",
+          "alias": ""
+        },
         "address": {
-          "address_Line_1": "111",
+          "address_Line_1": "",
           "address_Line_2": "",
           "address_Line_3": "",
           "town_City": "",
@@ -42,29 +20,52 @@
           "country": "",
           "general_Location": ""
         },
-        "contactDetails": {
+        "contact": {
           "landline_Number": "01234 567890",
           "mobile_Number": "01234 567890",
           "email_Address": "shine.alex@digital.hmrc.gov.uk"
         },
-        "businessTradingYears": "Over 5 years",
-        "reporterRelation": {
-          "relation": "My employer",
-          "isCurrent": false
+        "connection": {
+          "connection_Type": "Partner",
+          "current_Connection": true
         },
-        "VAT_Number": "GB1235478690",
-        "ct_Utr": "4321678905",
-        "employee_Number": "654/QW321",
-        "sa_Utr": "1092837564"
+        "niNumber": "AB 12 34 56 C",
+        "business": {
+          "business_Name": "",
+          "business_Type": "",
+          "employee_Count": 100,
+          "address": {
+            "address_Line_1": "111",
+            "address_Line_2": "",
+            "address_Line_3": "",
+            "town_City": "",
+            "postcode": "EH12 9JE",
+            "country": "",
+            "general_Location": ""
+          },
+          "contactDetails": {
+            "landline_Number": "01234 567890",
+            "mobile_Number": "01234 567890",
+            "email_Address": "shine.alex@digital.hmrc.gov.uk"
+          },
+          "businessTradingYears": "Over 5 years",
+          "reporterRelation": {
+            "relation": "My employer",
+            "isCurrent": false
+          },
+          "VAT_Number": "GB1235478690",
+          "ct_Utr": "4321678905",
+          "employee_Number": "654/QW321",
+          "sa_Utr": "1092837564"
+        }
       }
     }
   ],
-  "value_Fraud": 2000,
-  "value_Fraud_Band": "4",
-  "duration_Fraud": "Over 5 years",
-  "anyone_Else_Know": "Prefer not to say",
-  "how_Many_Know": 6,
-  "additional_Details": "You have 250 words",
+  "valueFraud": 2000,
+  "durationFraud": "Over 5 years",
+  "anyoneElseKnow": "Prefer not to say",
+  "howManyKnow": 6,
+  "additionalDetails": "You have 250 words",
   "reporter": {
     "forename": "",
     "surname": "",
@@ -72,5 +73,5 @@
     "email_Address": "modestas.ruksnaitis@digital.hmrc.gov.uk",
     "memorable_Word": ""
   },
-  "supporting_Evidence": true
+  "supportingEvidence": true
 }
