@@ -24,6 +24,7 @@ import uk.gov.hmrc.taxfraudreporting.services.XmlFactory
 
 import java.io.StringReader
 import java.time.LocalDateTime
+import java.util.UUID
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.SchemaFactory
@@ -36,7 +37,8 @@ class XMLFactorySpec extends IntegrationSpecCommonBase with GenDriven {
 
     "generate a valid EVI document from valid fraud report data" in {
       forAll(listsOfFraudReports) { listOfFraudReports =>
-        val headerString = xmlFactory.getFileHeader(LocalDateTime.now(), listOfFraudReports.size)
+        val correlationID = UUID.randomUUID()
+        val headerString  = xmlFactory.getFileHeader(correlationID, LocalDateTime.now(), listOfFraudReports.size)
 
         val reportString =
           listOfFraudReports.zipWithIndex flatMap {

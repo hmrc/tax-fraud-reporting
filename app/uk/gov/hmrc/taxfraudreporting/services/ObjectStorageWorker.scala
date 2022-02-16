@@ -26,6 +26,7 @@ import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{ObjectSummaryWithMd5, Path}
 
 import java.time.{LocalDate, LocalDateTime, LocalTime, ZoneOffset}
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.{DurationInt, DurationLong}
 import scala.concurrent.{ExecutionContext, Future}
@@ -56,9 +57,9 @@ class ObjectStorageWorker @Inject() (
 
   logger.info(s"First job in $delay s to repeat every $interval s.")
 
-  def storeObject: Future[ObjectSummaryWithMd5] = {
+  def storeObject(correlationID: UUID): Future[ObjectSummaryWithMd5] = {
     val extractTime  = LocalDateTime.now()
-    val fraudReports = fraudReportStreamer.stream(extractTime)
+    val fraudReports = fraudReportStreamer.stream(correlationID, extractTime)
     val fileName     = getFileName(extractTime)
 
     logger.info(s"Storing object $fileName.")
@@ -82,7 +83,11 @@ class ObjectStorageWorker @Inject() (
             gainedLock =>
               if (gainedLock) {
                 logger.info("Lock taken successfully.")
-                storeObject map Some.apply
+                val correlationID = UUID.randomUUID()
+                storeObject(correlationID) map {
+                  // TODO: SDES notification logic here
+                  Some.apply
+                }
               } else {
                 logger.info("Error occurred trying to take lock.")
                 Future(None)

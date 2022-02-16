@@ -22,18 +22,19 @@ import akka.util.ByteString
 import uk.gov.hmrc.taxfraudreporting.repositories.FraudReportRepository
 
 import java.time.LocalDateTime
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.language.postfixOps
 
 @Singleton
 class FraudReportStreamer @Inject() (fraudReportRepository: FraudReportRepository, xmlFactory: XmlFactory) {
 
-  def stream(extractTime: LocalDateTime): Source[ByteString, NotUsed] = {
+  def stream(correlationID: UUID, extractTime: LocalDateTime): Source[ByteString, NotUsed] = {
     val opening = Source.single(xmlFactory.getOpening)
 
     val header =
       Source.fromPublisher(fraudReportRepository.countUnprocessed)
-        .map(xmlFactory.getFileHeader(extractTime, _))
+        .map(xmlFactory.getFileHeader(correlationID, extractTime, _))
 
     val reports =
       Source.fromPublisher(fraudReportRepository.listUnprocessed)
