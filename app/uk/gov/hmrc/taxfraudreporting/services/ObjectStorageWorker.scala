@@ -26,6 +26,7 @@ import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{ObjectSummaryWithMd5, Path}
 
 import java.time.{LocalDate, LocalDateTime, LocalTime, ZoneOffset}
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.{DurationInt, DurationLong}
 import scala.concurrent.{ExecutionContext, Future}
@@ -56,9 +57,9 @@ class ObjectStorageWorker @Inject() (
 
   logger.info(s"First job in $delay s to repeat every $interval s.")
 
-  def storeObject: Future[ObjectSummaryWithMd5] = {
+  def storeObject(correlationID: UUID): Future[ObjectSummaryWithMd5] = {
     val extractTime  = LocalDateTime.now()
-    val fraudReports = fraudReportStreamer.stream(extractTime)
+    val fraudReports = fraudReportStreamer.stream(correlationID, extractTime)
     val fileName     = getFileName(extractTime)
 
     logger.info(s"Storing object $fileName.")
@@ -77,16 +78,19 @@ class ObjectStorageWorker @Inject() (
         if (isLocked) {
           logger.debug("Job already locked; leaving to other worker.")
           Future(None)
-        } else
+        } else {
+          val correlationID = UUID.randomUUID()
           logger.debug("Attempting lock.")
           for {
             lockGained <- lockRepository.takeLock(lockID, owner, 1.hours)
-            summary    <- storeObject if lockGained
-            _          <- lockRepository.releaseLock(lockID, owner)
+            summary <- storeObject(correlationID) if lockGained
+            _ <- lockRepository.releaseLock(lockID, owner)
           } yield {
+            // TODO: SDES notification logic here
             logger.debug(s"Object stored: ${summary.contentMd5}")
             Some(summary)
           }
+        }
     }
   }
 

@@ -37,8 +37,7 @@ class XmlFactory @Inject() (val configuration: Configuration) extends Configured
 
   def getOpening: String = s"""<?xml version="1.0" encoding="UTF-8"?><$rootElement>"""
 
-  def getFileHeader(dateTime: LocalDateTime, numOfReports: Long): String = {
-    val correlationID = UUID.randomUUID()
+  def getFileHeader(correlationID: UUID, dateTime: LocalDateTime, numOfReports: Long): String = {
     logger.info(s"Building header $correlationID")
 
     <header>

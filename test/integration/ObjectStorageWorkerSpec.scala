@@ -59,7 +59,7 @@ class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSuga
       val mockFraudReportStreamer = mock[FraudReportStreamer]
       def mockFraudReportSource   = Source single ByteString(testString)
       when {
-        mockFraudReportStreamer.stream(any())
+        mockFraudReportStreamer.stream(any(), any())
       } thenReturn mockFraudReportSource
 
       val mockObjectSummary     = ObjectSummaryWithMd5(null, 0, Md5Hash(testString), null)

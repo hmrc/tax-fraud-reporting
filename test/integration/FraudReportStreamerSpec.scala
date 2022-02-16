@@ -29,6 +29,7 @@ import uk.gov.hmrc.taxfraudreporting.services.FraudReportStreamer
 
 import java.nio.charset.Charset
 import java.time.LocalDateTime
+import java.util.UUID
 import scala.language.postfixOps
 import scala.xml.XML
 
@@ -54,8 +55,9 @@ class FraudReportStreamerSpec extends IntegrationSpecCommonBase with GenDriven {
           logger.info(id.toString)
         }
 
-        val source = streamer.stream(LocalDateTime.now())
-        val sink   = Sink.reduce[ByteString](_ ++ _)
+        val correlationID = UUID.randomUUID()
+        val source        = streamer.stream(correlationID, LocalDateTime.now())
+        val sink          = Sink.reduce[ByteString](_ ++ _)
 
         val byteString  = source runWith sink futureValue
         val xmlString   = byteString decodeString Charset.defaultCharset()
