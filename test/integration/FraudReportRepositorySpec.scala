@@ -22,8 +22,8 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
-import uk.gov.hmrc.taxfraudreporting.models.{FraudReport, FraudReportStatus}
-import uk.gov.hmrc.taxfraudreporting.repositories.{FraudReferenceRepository, FraudReportRepositoryImpl}
+import uk.gov.hmrc.taxfraudreporting.models.FraudReport
+import uk.gov.hmrc.taxfraudreporting.repositories.FraudReportRepositoryImpl
 import uk.gov.hmrc.taxfraudreporting.services.JsonValidationService
 
 import scala.concurrent.ExecutionContext
@@ -31,9 +31,8 @@ import scala.concurrent.ExecutionContext
 class FraudReportRepositorySpec extends IntegrationSpecCommonBase with DefaultPlayMongoRepositorySupport[FraudReport] {
   private implicit val ec: ExecutionContext = injector.instanceOf[ExecutionContext]
   private val validationService             = injector.instanceOf[JsonValidationService]
-  private val fraudReferenceService         = injector.instanceOf[FraudReferenceRepository]
 
-  override def repository = new FraudReportRepositoryImpl(mongoComponent, validationService, fraudReferenceService)
+  override def repository = new FraudReportRepositoryImpl(mongoComponent, validationService)
 
   override def beforeAll(): Unit =
     super.beforeAll()
@@ -54,8 +53,6 @@ class FraudReportRepositorySpec extends IntegrationSpecCommonBase with DefaultPl
   lazy val builder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
 
-  val correlationId = "fe28db96-d9db-4220-9e12-f2d267267c29"
-
   "a fraud report repository" should {
     List("business", "person") foreach { dataName =>
       val fileName    = s"example-$dataName.json"
@@ -71,15 +68,13 @@ class FraudReportRepositorySpec extends IntegrationSpecCommonBase with DefaultPl
 
         running(app) {
 
-          val document = repository.insert(inputData, correlationId).futureValue.right.get
+          val document = repository.insert(inputData).futureValue.right.get
 
           inside(document) {
-            case FraudReport(_id, cid, body, _, _) =>
+            case FraudReport(body, _, _, _, _id) =>
               _id mustEqual document._id
-              cid mustEqual correlationId
               body mustEqual inputData
 
-              repository.update(document._id, FraudReportStatus.Processed).futureValue
               repository.remove(document._id).futureValue
               repository.get(document._id).futureValue mustBe empty
           }
@@ -91,11 +86,8 @@ class FraudReportRepositorySpec extends IntegrationSpecCommonBase with DefaultPl
       val invalidData = Json.arr()
 
       running(app) {
-        repository.insert(invalidData, correlationId) foreach {
-          _.toOption mustBe empty
-        }
+        repository.insert(invalidData).futureValue.toOption mustBe empty
       }
-
     }
   }
 }

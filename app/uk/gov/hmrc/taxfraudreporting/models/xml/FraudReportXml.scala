@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxfraudreporting.data_formats
+package uk.gov.hmrc.taxfraudreporting.models.xml
 
-import play.api.libs.json.{Json, Reads}
+import scala.language.postfixOps
 
-import java.time.LocalDateTime
+trait FraudReportXml {
 
-case class FraudReport(
-  _id: Long,
-  sentToSdes: Boolean,
-  correlationId: String,
-  evasionData: EvasionData,
-  lastUpdated: LocalDateTime
-)
+  def toXml: xml.Elem
 
-object FraudReport {
-  implicit val reads: Reads[FraudReport] = Json.reads
+  def optionToXml[T](opt: Option[T], tag: String): xml.Elem =
+    opt match {
+      case Some(v) if v.toString.trim.nonEmpty =>
+        <xml>{v.toString}</xml>.copy(label = tag)
+      case _ => null
+    }
+
+  def optionToXml(opt: Option[FraudReportXml]): xml.Elem =
+    opt map { _.toXml } orNull
+
 }

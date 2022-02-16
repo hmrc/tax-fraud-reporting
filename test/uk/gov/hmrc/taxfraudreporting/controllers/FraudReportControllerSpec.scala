@@ -21,7 +21,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.taxfraudreporting.mocks.MockFraudReportRepository
+import uk.gov.hmrc.taxfraudreporting.services.MockFraudReportRepository
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
@@ -31,14 +31,8 @@ class FraudReportControllerSpec extends AnyWordSpec with Matchers {
     val postFraudReportURL =
       uk.gov.hmrc.taxfraudreporting.controllers.routes.FraudReportController.createFraudReport().url
 
-    def mockJsonRequest(data: JsValue, withCid: Boolean = true) = {
-      val req = FakeRequest("Post", postFraudReportURL) withBody data withHeaders "Content-Type" -> "application/json"
-
-      if (withCid)
-        req withHeaders "X-Correlation-ID" -> ""
-      else
-        req
-    }
+    def mockJsonRequest(data: JsValue) =
+      FakeRequest("Post", postFraudReportURL) withBody data withHeaders "Content-Type" -> "application/json"
 
     val succeedingRepo                        = new MockFraudReportRepository(true)
     implicit val ec: ExecutionContextExecutor = ExecutionContext.global
@@ -57,14 +51,6 @@ class FraudReportControllerSpec extends AnyWordSpec with Matchers {
       val controller  = new FraudReportController(stubControllerComponents(), failingRepo)
 
       val result = controller.createFraudReport(requestWithObj)
-      status(result) shouldBe BAD_REQUEST
-    }
-
-    "respond 400 Bad Request when missing X-Correlation-ID header" in {
-      val requestSansCid = mockJsonRequest(Json.arr(), withCid = false)
-      val controller     = new FraudReportController(stubControllerComponents(), succeedingRepo)
-
-      val result = controller.createFraudReport(requestSansCid)
       status(result) shouldBe BAD_REQUEST
     }
   }

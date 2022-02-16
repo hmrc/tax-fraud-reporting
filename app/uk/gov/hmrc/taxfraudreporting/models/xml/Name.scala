@@ -14,12 +14,27 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxfraudreporting.data_formats
+package uk.gov.hmrc.taxfraudreporting.models.xml
 
-import play.api.libs.json.{Json, Reads}
+import play.api.libs.json.{Json, OFormat}
 
-case class EvasionData(evasionCategory: String, fraudLocation: Address, reportedBy: String)
+final case class Name(
+  forename: Option[String] = None,
+  surname: Option[String] = None,
+  middle_Name: Option[String] = None,
+  alias: Option[String] = None
+) extends FraudReportXml {
 
-object EvasionData {
-  implicit val reads: Reads[EvasionData] = Json.reads
+  def toXml: xml.Elem =
+    <name>
+      {optionToXml(forename, "forename")}
+      {optionToXml(surname, "surname")}
+      {optionToXml(middle_Name, "middle_Name")}
+      {optionToXml(alias, "alias")}
+    </name>
+
+}
+
+object Name {
+  implicit val format: OFormat[Name] = Json.format
 }

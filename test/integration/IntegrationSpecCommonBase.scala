@@ -17,6 +17,7 @@
 package integration
 
 import com.codahale.metrics.SharedMetricRegistries
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, TestSuite}
@@ -28,8 +29,7 @@ import play.api.libs.ws.{WSClient, WSRequest}
 
 trait IntegrationSpecCommonBase
     extends AnyWordSpec with Matchers with GuiceOneServerPerSuite with BeforeAndAfterAll with BeforeAndAfterEach
-    with TestSuite {
-
+    with TestSuite with ScalaFutures with IntegrationPatience {
   lazy val injector: Injector = app.injector
 
   override def afterEach(): Unit = {

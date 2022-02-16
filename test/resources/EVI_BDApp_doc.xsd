@@ -1,16 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
-	<xs:element name="reports" type="reports"/>
+	<xs:element name="reports" type="Reports"/>
 
-	<xs:complexType name="reports">
+	<xs:complexType name="Reports">
 		<xs:sequence>
-			<xs:element name="fileHeader" type="FileHeader"/>
-			<xs:element name="report" minOccurs="1" maxOccurs="unbounded" type="FraudReport"/>
+			<xs:element name="header" type="Header"/>
+			<xs:element name="report" maxOccurs="unbounded" type="FraudReport"/>
 		</xs:sequence>
 	</xs:complexType>
 
-	<xs:complexType name="FileHeader">
+	<xs:complexType name="Header">
 		<xs:sequence>
+			<xs:element name="correlation_Id">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:pattern value="[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
 			<xs:element name="sending_System" type="xs:string" fixed="RIS Fraud Reporting"/>
 			<xs:element name="receiving_System" type="xs:string" fixed="EVI BDApp"/>
 			<xs:element name="extract_Date_Time" type="xs:string"/>
@@ -59,7 +66,7 @@
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
-			<xs:element name="value_Fraud_Band" minOccurs="0" type="String255"/>
+			<xs:element name="value_Fraud_Band" type="String50"/>
 			<xs:element name="duration_Fraud" type="String255"/>
 			<xs:element name="how_Many_Know" type="String255"/>
 			<xs:element name="additional_Details">
@@ -69,14 +76,14 @@
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
-			<xs:element name="reporter">
+			<xs:element name="reporter" minOccurs="0">
 				<xs:complexType>
 					<xs:sequence>
-						<xs:element name="forename" type="String255"/>
-						<xs:element name="surname" type="String255"/>
-						<xs:element name="telephone_Number" type="String255"/>
-						<xs:element name="email_Address" type="Email"/>
-						<xs:element name="memorable_Word" type="String255"/>
+						<xs:element name="forename" minOccurs="0" type="String255"/>
+						<xs:element name="surname" minOccurs="0" type="String255"/>
+						<xs:element name="telephone_Number" minOccurs="0" type="String50"/>
+						<xs:element name="email_Address" minOccurs="0" type="Email"/>
+						<xs:element name="memorable_Word" minOccurs="0" type="String255"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -90,44 +97,38 @@
 			<xs:element name="name" minOccurs="0">
 				<xs:complexType>
 					<xs:sequence>
-						<xs:element name="forename" type="String255"/>
-						<xs:element name="surname" type="String255"/>
-						<xs:element name="middle_Name" type="String255"/>
-						<xs:element name="alias" type="String255"/>
+						<xs:element name="forename" minOccurs="0" type="String255"/>
+						<xs:element name="surname" minOccurs="0" type="String255"/>
+						<xs:element name="middle_Name" minOccurs="0" type="String255"/>
+						<xs:element name="alias" minOccurs="0" type="String255"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
 			<xs:element name="address" type="Address" minOccurs="0"/>
 			<xs:element name="contact" type="Contact" minOccurs="0"/>
-			<xs:element name="personAge" minOccurs="0">
-				<xs:complexType>
-					<xs:sequence>
-						<xs:element name="dob">
-							<xs:simpleType>
-								<xs:restriction base="xs:string">
-									<xs:pattern value="\d\d/\d\d/\d\d\d\d"/>
-								</xs:restriction>
-							</xs:simpleType>
-						</xs:element>
-						<xs:element name="age">
-							<xs:simpleType>
-								<xs:restriction base="xs:int">
-									<xs:minInclusive value="0"/>
-									<xs:maxInclusive value="120"/>
-								</xs:restriction>
-							</xs:simpleType>
-						</xs:element>
-					</xs:sequence>
-				</xs:complexType>
+			<xs:element name="dob" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:pattern value="\d\d/\d\d/\d\d\d\d"/>
+					</xs:restriction>
+				</xs:simpleType>
 			</xs:element>
-			<xs:element name="connection_Type" type="xs:string"/>
-			<xs:element name="NINO">
+			<xs:element name="age" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:int">
+						<xs:minInclusive value="0"/>
+						<xs:maxInclusive value="122"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="NINO" minOccurs="0">
 				<xs:simpleType>
 					<xs:restriction base="xs:token">
 						<xs:pattern value="[A-Z]{2}\d{6}[A-Z]"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
+			<xs:element name="connection_Type" type="xs:string"/>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -138,28 +139,28 @@
 			<xs:element name="employeeCount" type="xs:unsignedInt" minOccurs="0"/>
 			<xs:element name="address" type="Address" minOccurs="0"/>
 			<xs:element name="contact" type="Contact" minOccurs="0"/>
-			<xs:element name="connection_Type" type="String255"/>
-			<xs:element name="VAT_Number" minOccurs="0">
+			<xs:element name="businessVATNo" minOccurs="0">
 				<xs:simpleType>
 					<xs:restriction base="xs:token">
 						<xs:pattern value="([A-Z]{2})?\d{10}|"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
-			<xs:element name="ct_Utr" minOccurs="0">
+			<xs:element name="ctUTR" minOccurs="0">
 				<xs:simpleType>
 					<xs:restriction base="xs:token">
 						<xs:pattern value="\d{10}|"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
-			<xs:element name="employee_Number" minOccurs="0">
+			<xs:element name="subjectPAYERef" minOccurs="0">
 				<xs:simpleType>
 					<xs:restriction base="xs:token">
 						<xs:pattern value="\d{3}/[A-Z]{2}\d{3,5}|"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
+			<xs:element name="reporterConn" type="String255"/>
 		</xs:sequence>
 	</xs:complexType>
 	<!-- End <nominal> types (Person, Business) -->
@@ -178,9 +179,9 @@
 
 	<xs:complexType name="Contact">
 		<xs:sequence>
-			<xs:element name="landline_Number" type="String50"/>
-			<xs:element name="mobile_Number" type="String50"/>
-			<xs:element name="email_Address" type="Email"/>
+			<xs:element name="landline" minOccurs="0" type="String50"/>
+			<xs:element name="mobile" minOccurs="0" type="String50"/>
+			<xs:element name="email" minOccurs="0" type="Email"/>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -203,8 +204,6 @@
 		</xs:restriction>
 	</xs:simpleType>
 
-	<!-- End ActivityType enum -->
-
 	<!-- Begin metadata types -->
 	<xs:simpleType name="DateTime">
 		<xs:restriction base="xs:string">
@@ -214,7 +213,8 @@
 
 	<xs:simpleType name="ReportNumber">
 		<xs:restriction base="xs:int">
-			<xs:pattern value="[0-5]"/>
+			<xs:minInclusive value="1"/>
+			<xs:maxInclusive value="14280"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<!-- End metadata types -->

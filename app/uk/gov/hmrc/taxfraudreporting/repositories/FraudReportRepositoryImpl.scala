@@ -17,56 +17,55 @@
 package uk.gov.hmrc.taxfraudreporting.repositories
 
 import com.google.inject.{Inject, Singleton}
-import org.mongodb.scala.model.Filters.{and, equal}
+import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.model.Updates.set
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import org.mongodb.scala.{FindObservable, SingleObservable}
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-import uk.gov.hmrc.taxfraudreporting.models.{FraudReference, FraudReport, FraudReportStatus}
+import uk.gov.hmrc.taxfraudreporting.models.FraudReport
 import uk.gov.hmrc.taxfraudreporting.services.JsonValidationService
 
 import java.time.LocalDateTime
+import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class FraudReportRepositoryImpl @Inject() (
-  mongoComponent: MongoComponent,
-  validationService: JsonValidationService,
-  fraudReferenceService: FraudReferenceRepository
-)(implicit val ec: ExecutionContext)
-    extends PlayMongoRepository[FraudReport](
-      collectionName = "fraud-reports",
+class FraudReportRepositoryImpl @Inject() (mongoComponent: MongoComponent, validationService: JsonValidationService)(
+  implicit val ec: ExecutionContext
+) extends PlayMongoRepository[FraudReport](
+      collectionName = "fraudReports",
       mongoComponent = mongoComponent,
       domainFormat = FraudReport.format,
-      indexes = Seq(IndexModel(ascending("status"), IndexOptions().name("fraud-report-status")))
+      indexes = Seq(IndexModel(ascending("correlationId"), IndexOptions().name("isProcessed")))
     ) with FraudReportRepository {
 
   private val validator = validationService getValidator "fraud-report.schema"
 
-  def insert(reportBody: JsValue, reportId: String): Future[Either[List[String], FraudReport]] =
-    fraudReferenceService.nextChargeReference() flatMap {
-      ref =>
-        val validationErrors = validator validate reportBody
+  def insert(reportBody: JsValue): Future[Either[List[String], FraudReport]] = {
+    val validationErrors = validator validate reportBody
 
-        if (validationErrors.isEmpty) {
-          val fraudReport = FraudReport(ref, reportId, reportBody, LocalDateTime.now())
+    if (validationErrors.isEmpty) {
+      val fraudReport = FraudReport(reportBody, LocalDateTime.now())
 
-          collection.insertOne(fraudReport).toFuture() map { _ => Right(fraudReport) }
-        } else
-          Future.successful(Left(validationErrors))
-    }
+      collection.insertOne(fraudReport).toFuture map { _ => Right(fraudReport) }
+    } else
+      Future.successful(Left(validationErrors))
+  }
 
-  def get(id: FraudReference): Future[Option[FraudReport]] =
+  def get(id: UUID): Future[Option[FraudReport]] =
     collection.find(equal("_id", id.toString)).first().toFutureOption()
 
-  def update(id: FraudReference, status: FraudReportStatus): Future[Option[FraudReport]] =
-    collection.findOneAndUpdate(equal("_id", id.toString), set("status", status.toString)).toFutureOption()
+  def remove(id: UUID): Future[Option[FraudReport]] =
+    collection.findOneAndDelete(equal("_id", id.toString)).headOption
 
-  def remove(id: FraudReference): Future[Option[FraudReport]] =
-    collection.findOneAndDelete(
-      and(equal("_id", id.toString), equal("status", FraudReportStatus.Processed.toString))
-    ).headOption
+  private val unprocessed = equal("isProcessed", false)
+
+  def listUnprocessed: FindObservable[FraudReport] =
+    collection find unprocessed
+
+  def countUnprocessed: SingleObservable[Long] =
+    collection countDocuments unprocessed
 
 }

@@ -19,15 +19,20 @@ package uk.gov.hmrc.taxfraudreporting.models
 import play.api.libs.json._
 
 import java.time.LocalDateTime
+import java.util.UUID
 
-case class FraudReport(
-  _id: FraudReference,
-  correlationId: String,
+final case class FraudReport(
   body: JsValue,
   submitted: LocalDateTime,
-  status: FraudReportStatus = FraudReportStatus.Received
+  isProcessed: Boolean = false,
+  correlationId: Option[UUID] = None,
+  _id: UUID = UUID.randomUUID()
 )
 
 object FraudReport {
+
+  implicit val formatUUID: Format[UUID] =
+    Format(_.validate[String] map UUID.fromString, uuid => JsString(uuid.toString))
+
   implicit val format: OFormat[FraudReport] = Json.format
 }

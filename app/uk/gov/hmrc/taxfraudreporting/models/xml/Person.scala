@@ -14,31 +14,33 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxfraudreporting.xml.models
+package uk.gov.hmrc.taxfraudreporting.models.xml
 
-import uk.gov.hmrc.taxfraudreporting.xml.util.FraudReportXml
+import play.api.libs.json.{Json, OFormat}
 
-import scala.xml.Elem
-
-case class Person(
+final case class Person(
   name: Option[Name] = None,
   address: Option[Address] = None,
   contact: Option[Contact] = None,
   dob: Option[String] = None,
-  age: Option[String] = None,
-  connection_Type: Option[String] = None,
-  NINO: Option[String] = None
+  age: Option[Int] = None,
+  NINO: Option[String] = None,
+  connectionType: String
 ) extends FraudReportXml {
 
-  override def toXml: Elem =
+  def toXml: xml.Elem =
     <person>
       {optionToXml(name)}
       {optionToXml(address)}
       {optionToXml(contact)}
-      {optionToXml(dob, Some("dob"))}
-      {optionToXml(age, Some("age"))}
-      {optionToXml(connection_Type, Some("connection_Type"))}
-      {optionToXml(NINO, Some("NINO"))}
+      {optionToXml(dob, "dob")}
+      {optionToXml(age, "age")}
+      {optionToXml(NINO, "NINO")}
+      <connection_Type>{connectionType}</connection_Type>
     </person>
 
+}
+
+object Person {
+  implicit val format: OFormat[Person] = Json.format
 }

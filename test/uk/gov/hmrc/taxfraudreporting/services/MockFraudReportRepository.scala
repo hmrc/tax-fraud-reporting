@@ -14,27 +14,32 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxfraudreporting.mocks
+package uk.gov.hmrc.taxfraudreporting.services
 
+import org.mongodb.scala.{FindObservable, SingleObservable}
 import play.api.libs.json.JsValue
-import uk.gov.hmrc.taxfraudreporting.models.{FraudReference, FraudReport}
+import uk.gov.hmrc.taxfraudreporting.models.FraudReport
 import uk.gov.hmrc.taxfraudreporting.repositories.FraudReportRepository
 
 import java.time.LocalDateTime
+import java.util.UUID
 import scala.concurrent.Future
 
 class MockFraudReportRepository(succeeding: Boolean) extends FraudReportRepository {
 
-  def insert(data: JsValue, reportId: String): Future[Either[List[String], FraudReport]] =
+  def insert(data: JsValue): Future[Either[List[String], FraudReport]] =
     Future.successful {
       if (succeeding)
-        Right(FraudReport(FraudReference(0), "", data, LocalDateTime.now()))
+        Right(FraudReport(data, LocalDateTime.now()))
       else
         Left(List("Invalid JSON"))
     }
 
-  def get(id: FraudReference): Future[Option[FraudReport]] = null
+  def get(id: UUID): Future[Option[FraudReport]] = null
 
-  def remove(id: FraudReference): Future[Option[FraudReport]] = null
+  def remove(id: UUID): Future[Option[FraudReport]] = null
 
+  def listUnprocessed: FindObservable[FraudReport] = null
+
+  def countUnprocessed: SingleObservable[Long] = _ => {}
 }
