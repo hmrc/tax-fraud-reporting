@@ -19,6 +19,8 @@ package integration
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
+import cats.data.EitherT
+import cats.implicits._
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.Assertion
@@ -28,9 +30,11 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.mongo.lock.MongoLockRepository
+import uk.gov.hmrc.objectstore.client.Path.{Directory, File}
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5}
-import uk.gov.hmrc.taxfraudreporting.services.{FraudReportStreamer, ObjectStorageWorker}
+import uk.gov.hmrc.taxfraudreporting.models.Error
+import uk.gov.hmrc.taxfraudreporting.services.{FraudReportStreamer, ObjectStorageWorker, SDESService}
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
@@ -57,17 +61,25 @@ class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSuga
 
     def objectSummaryWhen(shouldBeLocked: Boolean)(test: Option[ObjectSummaryWithMd5] => Assertion): Unit = {
       val mockFraudReportStreamer = mock[FraudReportStreamer]
-      def mockFraudReportSource   = Source single ByteString(testString)
+
+      def mockFraudReportSource = Source single ByteString(testString)
       when {
         mockFraudReportStreamer.stream(any(), any())
       } thenReturn mockFraudReportSource
 
-      val mockObjectSummary     = ObjectSummaryWithMd5(null, 0, Md5Hash(testString), null)
+      val mockObjectSummary     = ObjectSummaryWithMd5(File(Directory("/tmp"), "file1.dat"), 0, Md5Hash(testString), null)
       val mockObjectStoreClient = mock[PlayObjectStoreClient]
       when {
         mockObjectStoreClient.putObject(any(), any(), any(), any(), any(), any())(any(), any())
       } thenReturn
         Future.successful(mockObjectSummary)
+
+      val mockSDESService = mock[SDESService]
+
+      when {
+        mockSDESService.fileNotify(any())(any())
+      } thenReturn
+        EitherT.right[Error](Future.successful(()))
 
       if (shouldBeLocked)
         await(lockRepository.takeLock("lockID", "owner", 1.hours))
@@ -79,7 +91,13 @@ class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSuga
       isLocked mustBe shouldBeLocked
 
       val objectStorageWorker =
-        new ObjectStorageWorker(configuration, mockFraudReportStreamer, lockRepository, mockObjectStoreClient) {
+        new ObjectStorageWorker(
+          configuration,
+          mockFraudReportStreamer,
+          lockRepository,
+          mockObjectStoreClient,
+          mockSDESService
+        ) {
           override val delay = 0
         }
 
