@@ -16,41 +16,46 @@
 
 package uk.gov.hmrc.taxfraudreporting.controllers
 
+import akka.actor.ActorSystem
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{JsValue, Json}
+import org.scalatestplus.mockito.MockitoSugar
+import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.taxfraudreporting.services.MockFraudReportRepository
+import uk.gov.hmrc.taxfraudreporting.models.{FraudReport, FraudReportBody}
+import uk.gov.hmrc.taxfraudreporting.repositories.FraudReportRepository
 
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
-class FraudReportControllerSpec extends AnyWordSpec with Matchers {
-
+class FraudReportControllerSpec extends AnyWordSpec with Matchers with MockitoSugar {
   "POST /create-report" should {
     val postFraudReportURL =
       uk.gov.hmrc.taxfraudreporting.controllers.routes.FraudReportController.createFraudReport().url
 
-    def mockJsonRequest(data: JsValue) =
-      FakeRequest("Post", postFraudReportURL) withBody data withHeaders "Content-Type" -> "application/json"
-
-    val succeedingRepo                        = new MockFraudReportRepository(true)
     implicit val ec: ExecutionContextExecutor = ExecutionContext.global
+    implicit val as: ActorSystem              = ActorSystem()
 
-    val requestWithObj = mockJsonRequest(Json.obj())
+    val repo = mock[FraudReportRepository]
+    val body = FraudReportBody("", Nil)
+    when(repo.insert(any())) thenReturn Future.successful(FraudReport(body))
 
-    "respond 202 Accepted given a valid fraud report" in {
-      val controller = new FraudReportController(stubControllerComponents(), succeedingRepo)
+    val controller = new FraudReportController(stubControllerComponents(), repo)
 
-      val result = controller.createFraudReport(requestWithObj)
+    "respond 201 Created given a valid fraud report" in {
+      val request = FakeRequest("Post", postFraudReportURL) withBody
+        body withHeaders "Content-Type" -> "application/json"
+      val result = controller.createFraudReport(request)
+
       status(result) shouldBe CREATED
     }
 
     "respond 400 Bad Request when given an invalid fraud report" in {
-      val failingRepo = new MockFraudReportRepository(false)
-      val controller  = new FraudReportController(stubControllerComponents(), failingRepo)
-
-      val result = controller.createFraudReport(requestWithObj)
+      val request = FakeRequest("Post", postFraudReportURL) withBody
+        Json.obj() withHeaders "Content-Type" -> "application/json"
+      val result = controller.createFraudReport(request)
       status(result) shouldBe BAD_REQUEST
     }
   }

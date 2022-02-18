@@ -22,10 +22,8 @@
         "email_Address": "shine.alex@digital.hmrc.gov.uk"
       },
       "businessTradingYears": "Over 5 years",
-      "reporterRelation": {
-        "relation": "My employer",
-        "isCurrent": false
-      },
+      "connectionType": "My employer",
+      "isCurrent": false,
       "VAT_Number": "0987654321",
       "ct_Utr": "1235476890",
       "employee_Number": "123/AB456",
@@ -35,7 +33,7 @@
   "valueFraud": 10000,
   "durationFraud": "Over 5 years",
   "anyoneElseKnow": "Prefer not to say",
-  "howManyKnow": 6,
+  "howManyKnow": "6",
   "additionalDetails": "You have 250 words",
   "reporter": {
     "forename": "",
@@ -44,5 +42,5 @@
     "email_Address": "modestas.ruksnaitis@digital.hmrc.gov.uk",
     "memorable_Word": ""
   },
-  "supportingEvidence": true
+  "hasEvidence": true
 }

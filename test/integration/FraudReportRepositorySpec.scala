@@ -21,12 +21,11 @@ import org.scalatest.Inside.inside
 import org.scalatest.OptionValues
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
-import uk.gov.hmrc.taxfraudreporting.models.FraudReport
+import uk.gov.hmrc.taxfraudreporting.models.{FraudReport, FraudReportBody}
 import uk.gov.hmrc.taxfraudreporting.repositories.FraudReportRepositoryImpl
-import uk.gov.hmrc.taxfraudreporting.services.JsonValidationService
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext
@@ -34,9 +33,8 @@ import scala.concurrent.ExecutionContext
 class FraudReportRepositorySpec
     extends IntegrationSpecCommonBase with DefaultPlayMongoRepositorySupport[FraudReport] with OptionValues {
   private implicit val ec: ExecutionContext = injector.instanceOf[ExecutionContext]
-  private val validationService             = injector.instanceOf[JsonValidationService]
 
-  override def repository = new FraudReportRepositoryImpl(mongoComponent, validationService)
+  override def repository = new FraudReportRepositoryImpl(mongoComponent)
 
   override def beforeAll(): Unit =
     super.beforeAll()
@@ -61,7 +59,7 @@ class FraudReportRepositorySpec
     List("business", "person") foreach { dataName =>
       val fileName    = s"example-$dataName.json"
       val stream      = getClass.getClassLoader getResourceAsStream fileName
-      val exampleData = (Json parse stream).as[JsObject]
+      val exampleData = (Json parse stream).as[FraudReportBody]
 
       s"insert and remove example $dataName fraud report" in {
 
@@ -72,7 +70,7 @@ class FraudReportRepositorySpec
 
         running(app) {
 
-          val document = repository.insert(inputData).futureValue.right.get
+          val document = repository.insert(inputData).futureValue
 
           inside(document) {
             case FraudReport(body, _, _, _, _id) =>
@@ -110,14 +108,6 @@ class FraudReportRepositorySpec
           updated.head._id mustBe unprocessedDocument._id
           updated.head.correlationId.value should be(correlationId)
         }
-      }
-    }
-
-    "return errors given an invalid fraud report" in {
-      val invalidData = Json.arr()
-
-      running(app) {
-        repository.insert(invalidData).futureValue.toOption mustBe empty
       }
     }
   }

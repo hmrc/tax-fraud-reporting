@@ -18,7 +18,6 @@ package shared
 
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
-import play.api.libs.json.Json
 import uk.gov.hmrc.taxfraudreporting.models.xml._
 import uk.gov.hmrc.taxfraudreporting.models.{FraudReport, FraudReportBody}
 
@@ -162,7 +161,7 @@ trait GenDriven {
   private val fraudReports = for {
     body        <- fraudReportBodies
     isProcessed <- arbitrary[Boolean]
-  } yield FraudReport(Json toJson body, LocalDateTime.now(), isProcessed)
+  } yield FraudReport(body, LocalDateTime.now(), isProcessed)
 
   val listsOfFraudReports: Gen[List[FraudReport]] = nonEmptyListsOf(fraudReports, 99)
 
