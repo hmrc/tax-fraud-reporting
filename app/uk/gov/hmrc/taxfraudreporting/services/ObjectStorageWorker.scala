@@ -24,6 +24,7 @@ import uk.gov.hmrc.mongo.lock.MongoLockRepository
 import uk.gov.hmrc.objectstore.client.play.Implicits.{akkaSourceContentWrite, futureMonad}
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{ObjectSummaryWithMd5, Path}
+import uk.gov.hmrc.taxfraudreporting.models.sdes.{FileAudit, FileChecksum, FileMetaData, SDESFileNotifyRequest}
 
 import java.time.{LocalDate, LocalDateTime, LocalTime, ZoneOffset}
 import java.util.UUID
@@ -37,7 +38,9 @@ class ObjectStorageWorker @Inject() (
   val configuration: Configuration,
   fraudReportStreamer: FraudReportStreamer,
   lockRepository: MongoLockRepository,
-  objectStoreClient: PlayObjectStoreClient
+  objectStoreClient: PlayObjectStoreClient,
+  sdesService: SDESService/*,
+  fraudReportRepository: FraudReportRepository*/
 )(implicit executionContext: ExecutionContext, actorSystem: ActorSystem)
     extends Configured("objectStorageWorker") {
   private val logger = Logger(getClass)
@@ -55,12 +58,21 @@ class ObjectStorageWorker @Inject() (
   private val nowEpoch = LocalDateTime.now() toEpochSecond ZoneOffset.UTC
   val delay: Long      = (jobEpoch - nowEpoch + daySecs) % interval
 
+  private val recipientOrSender: String =
+    configuration.get[String]("services.sdes.recipient-or-sender")
+
+  private val informationType: String =
+    configuration.get[String]("services.sdes.information-type")
+
+  private val fileLocationBaseUrl: String =
+    configuration.get[String]("services.sdes.file-location-base-url")
+
+  private val objectStoreLocationPrefix: String = s"$fileLocationBaseUrl/object-store/object/ris-kana/"
+
   logger.info(s"First job in $delay s to repeat every $interval s.")
 
-  def storeObject(correlationID: UUID): Future[ObjectSummaryWithMd5] = {
-    val extractTime  = LocalDateTime.now()
+  def storeObject(correlationID: UUID, extractTime: LocalDateTime, fileName: String): Future[ObjectSummaryWithMd5] = {
     val fraudReports = fraudReportStreamer.stream(correlationID, extractTime)
-    val fileName     = getFileName(extractTime)
 
     logger.info(s"Storing object $fileName.")
 
@@ -80,13 +92,16 @@ class ObjectStorageWorker @Inject() (
           Future(None)
         } else {
           val correlationID = UUID.randomUUID()
+          val extractTime   = LocalDateTime.now()
+          val fileName      = getFileName(extractTime)
           logger.debug("Attempting lock.")
           for {
             lockGained <- lockRepository.takeLock(lockID, owner, 1.hours)
-            summary <- storeObject(correlationID) if lockGained
+            summary <- storeObject(correlationID, extractTime, fileName) if lockGained
             _ <- lockRepository.releaseLock(lockID, owner)
           } yield {
-            // TODO: SDES notification logic here
+            notifySDES(correlationID, fileName, summary)
+            // TODO: update unprocessed reports with cid (maybe in the streamer?)
             logger.debug(s"Object stored: ${summary.contentMd5}")
             Some(summary)
           }
@@ -99,5 +114,31 @@ class ObjectStorageWorker @Inject() (
       .tick(delay seconds, interval seconds, job)
       .flatMapConcat(Source.future)
       .runWith(Sink.queue())
+
+  private def notifySDES(correlationID: UUID, fileName: String, objWithSummary: ObjectSummaryWithMd5): Unit = {
+    val notifyRequest = createNotifyRequest(objWithSummary, fileName, correlationID)
+    sdesService.fileNotify(notifyRequest).value foreach {
+      case Left(error) =>
+        logger.warn(s"Error in notifying SDES about file :: $fileName correlationId:: $correlationID. Error:: $error")
+    }
+  }
+
+  private def createNotifyRequest(
+    objSummary: ObjectSummaryWithMd5,
+    fileName: String,
+    uuid: UUID
+  ): SDESFileNotifyRequest =
+    SDESFileNotifyRequest(
+      informationType,
+      FileMetaData(
+        recipientOrSender,
+        fileName,
+        s"$objectStoreLocationPrefix${objSummary.location.asUri}",
+        FileChecksum(value = objSummary.contentMd5.value),
+        objSummary.contentLength,
+        List()
+      ),
+      FileAudit(uuid.toString)
+    )
 
 }

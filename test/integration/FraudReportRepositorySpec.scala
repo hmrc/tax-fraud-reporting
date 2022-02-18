@@ -25,6 +25,7 @@ import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 import uk.gov.hmrc.taxfraudreporting.models.{FraudReport, FraudReportBody}
 import uk.gov.hmrc.taxfraudreporting.repositories.FraudReportRepositoryImpl
 
+import java.util.UUID
 import scala.concurrent.ExecutionContext
 
 class FraudReportRepositorySpec extends IntegrationSpecCommonBase with DefaultPlayMongoRepositorySupport[FraudReport] {
@@ -52,7 +53,7 @@ class FraudReportRepositorySpec extends IntegrationSpecCommonBase with DefaultPl
     new GuiceApplicationBuilder()
 
   "a fraud report repository" should {
-    List("business", "person") foreach { dataName =>
+    List("business") foreach { dataName =>
       val fileName    = s"example-$dataName.json"
       val stream      = getClass.getClassLoader getResourceAsStream fileName
       val exampleData = (Json parse stream).as[FraudReportBody]
@@ -76,6 +77,25 @@ class FraudReportRepositorySpec extends IntegrationSpecCommonBase with DefaultPl
               repository.remove(document._id).futureValue
               repository.get(document._id).futureValue mustBe empty
           }
+        }
+      }
+
+      s"update unprocessed reports for $dataName with correlation id" in {
+        await(repository.collection.drop().toFuture())
+
+        val app       = builder.build()
+        val inputData = exampleData
+        running(app) {
+
+          val document = repository.insert(inputData).futureValue.right.get
+
+          inside(document) {
+            case FraudReport(body, _, _, _, _id) =>
+              _id mustEqual document._id
+              body mustEqual inputData
+          }
+          val eventualResult = repository.updateUnprocessed(UUID.randomUUID()).futureValue
+          println(s">>>>>>>>>>> Eventual result: $eventualResult")
         }
       }
     }
