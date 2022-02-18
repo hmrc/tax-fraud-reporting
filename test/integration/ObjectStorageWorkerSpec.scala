@@ -52,7 +52,7 @@ class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSuga
   override def afterEach(): Unit = {
     super.afterEach()
     logger.info("Releasing lock.")
-    await(lockRepository.releaseLock("lockID", "owner"))
+    await(lockRepository.releaseLock("lock", "owner"))
     logger.info(s"Locks after: ${lockRepository.collection.find().toFuture.futureValue}")
   }
 
@@ -86,10 +86,10 @@ class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSuga
         Future.successful((mock[UpdateResult]))
 
       if (shouldBeLocked)
-        await(lockRepository.takeLock("lockID", "owner", 1.hours))
+        await(lockRepository.takeLock("lock", "owner", 1.hours))
 
-      val isLocked = lockRepository.isLocked("lockID", "owner").futureValue
-      logger.info(s"Is locked? $isLocked")
+      val isLocked = lockRepository.isLocked("lock", "owner").futureValue
+      logger.info(s"Is locked before? $isLocked")
       logger.info(s"Locks before: ${lockRepository.collection.find().toFuture.futureValue}")
       logger.info(s"Should be locked? $shouldBeLocked")
       isLocked mustBe shouldBeLocked
@@ -109,6 +109,7 @@ class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSuga
       val objectSummaryOption = objectStorageWorker.queue.pull().futureValue.value
       logger.info(objectSummaryOption.toString)
 
+      logger.info(s"Is locked after? $isLocked")
       test(objectSummaryOption)
     }
 

@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxfraudreporting.repositories
 
 import com.google.inject.{Inject, Singleton}
 import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.IndexModel
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.{IndexModel, Updates}
 import org.mongodb.scala.result.UpdateResult
