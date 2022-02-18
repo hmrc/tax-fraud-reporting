@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxfraudreporting.services
 
 import play.api.{Configuration, Logger}
-import uk.gov.hmrc.taxfraudreporting.models.{FraudReport, FraudReportBody}
+import uk.gov.hmrc.taxfraudreporting.models.FraudReport
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -56,11 +56,10 @@ class XmlFactory @Inject() (val configuration: Configuration) extends Configured
 
   def getReport(report: FraudReport, index: Long): String = {
     logger.info(s"Preparing fraud report #${index + 1}.")
-    val FraudReport(body, submitted, _, _, id) = report
+    val FraudReport(fraudReportBody, submitted, _, _, id) = report
 
-    val fraudReportBody = body.as[FraudReportBody]
-    val valueFraud      = fraudReportBody.valueFraud getOrElse 0L
-    val valueFraudBand  = valueFraudBands.count(_ <= valueFraud) + 1
+    val valueFraud     = fraudReportBody.valueFraud getOrElse 0L
+    val valueFraudBand = valueFraudBands.count(_ <= valueFraud) + 1
 
     <report>
       <report_Number>{index + 1}</report_Number>
@@ -74,7 +73,7 @@ class XmlFactory @Inject() (val configuration: Configuration) extends Configured
       <how_Many_Know>{fraudReportBody.howManyKnow.orNull}</how_Many_Know>
       <additional_Details>{fraudReportBody.additionalDetails}</additional_Details>{
       fraudReportBody.reporter map { _.toXml } orNull
-    }<supporting_Evidence>{fraudReportBody.supportingEvidence}</supporting_Evidence>
+    }<supporting_Evidence>{fraudReportBody.hasEvidence}</supporting_Evidence>
     </report> toString
   }
 

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxfraudreporting.services
 
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{Keep, Sink, SinkQueueWithCancel, Source}
+import akka.stream.scaladsl.{Sink, SinkQueueWithCancel, Source}
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.lock.MongoLockRepository
@@ -75,33 +75,25 @@ class ObjectStorageWorker @Inject() (
     lockRepository.isLocked(lockID, owner) flatMap {
       isLocked =>
         if (isLocked) {
-          logger.info("Job already locked; leaving to other worker.")
+          logger.debug("Job already locked; leaving to other worker.")
           Future(None)
         } else
-          lockRepository.takeLock(lockID, owner, 1.hours) flatMap {
-            gainedLock =>
-              if (gainedLock) {
-                logger.info("Lock taken successfully.")
-                storeObject map Some.apply
-              } else {
-                logger.info("Error occurred trying to take lock.")
-                Future(None)
-              }
+          logger.debug("Attempting lock.")
+          for {
+            lockGained <- lockRepository.takeLock(lockID, owner, 1.hours)
+            summary    <- storeObject if lockGained
+            _          <- lockRepository.releaseLock(lockID, owner)
+          } yield {
+            logger.debug(s"Object stored: ${summary.contentMd5}")
+            Some(summary)
           }
     }
   }
 
-  private def logResult(summaryOpt: Option[ObjectSummaryWithMd5]): Unit =
-    summaryOpt match {
-      case Some(summary) => logger.info(s"Stored object: ${summary.contentMd5}.")
-      case None          => logger.info("Lock not acquired.")
-    }
-
   val queue: SinkQueueWithCancel[Option[ObjectSummaryWithMd5]] =
-    Source.tick(delay seconds, interval seconds, job)
+    Source
+      .tick(delay seconds, interval seconds, job)
       .flatMapConcat(Source.future)
-      .wireTapMat(Sink.queue())(Keep.right)
-      .toMat(Sink foreach logResult)(Keep.left)
-      .run()
+      .runWith(Sink.queue())
 
 }

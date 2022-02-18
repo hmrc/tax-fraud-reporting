@@ -38,13 +38,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSugar {
   private val logger = Logger(getClass)
 
-  override def afterEach(): Unit = {
-    super.afterEach()
-    logger.info("Releasing lock.")
-    await(lockRepository.releaseLock("lockID", "owner"))
-    logger.info(s"Locks present: ${lockRepository.collection.find().toFuture.futureValue}")
-  }
-
   private implicit val executionContext: ExecutionContext = app.injector.instanceOf[ExecutionContext]
   private implicit val actorSystem: ActorSystem           = app.injector.instanceOf[ActorSystem]
 
@@ -52,6 +45,13 @@ class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSuga
   private val lockRepository = app.injector.instanceOf[MongoLockRepository]
 
   private val testString = "qwertyuiop"
+
+  override def afterEach(): Unit = {
+    super.afterEach()
+    logger.info("Releasing lock.")
+    await(lockRepository.releaseLock("lockID", "owner"))
+    logger.info(s"Locks after: ${lockRepository.collection.find().toFuture.futureValue}")
+  }
 
   "ObjectStorageWorker's materialised value" should {
 
@@ -74,7 +74,7 @@ class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSuga
 
       val isLocked = lockRepository.isLocked("lockID", "owner").futureValue
       logger.info(s"Is locked? $isLocked")
-      logger.info(s"Locks present: ${lockRepository.collection.find().toFuture.futureValue}")
+      logger.info(s"Locks before: ${lockRepository.collection.find().toFuture.futureValue}")
       logger.info(s"Should be locked? $shouldBeLocked")
       isLocked mustBe shouldBeLocked
 
@@ -88,6 +88,7 @@ class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSuga
 
       test(objectSummaryOption)
     }
+
     "be Some object summary on job completion" in objectSummaryWhen(shouldBeLocked = false) {
       _ mustBe defined
     }

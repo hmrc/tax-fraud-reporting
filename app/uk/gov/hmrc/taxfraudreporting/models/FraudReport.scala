@@ -22,8 +22,8 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 final case class FraudReport(
-  body: JsValue,
-  submitted: LocalDateTime,
+  body: FraudReportBody,
+  submitted: LocalDateTime = LocalDateTime.now(),
   isProcessed: Boolean = false,
   correlationId: Option[UUID] = None,
   _id: UUID = UUID.randomUUID()

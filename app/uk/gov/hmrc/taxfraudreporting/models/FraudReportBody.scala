@@ -27,7 +27,7 @@ final case class FraudReportBody(
   howManyKnow: Option[String] = None,
   additionalDetails: Option[String] = None,
   reporter: Option[Reporter] = None,
-  supportingEvidence: Boolean = false
+  hasEvidence: Boolean = false
 )
 
 object FraudReportBody {
