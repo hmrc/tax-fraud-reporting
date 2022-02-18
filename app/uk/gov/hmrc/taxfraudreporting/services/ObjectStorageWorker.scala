@@ -39,7 +39,7 @@ class ObjectStorageWorker @Inject() (
   fraudReportStreamer: FraudReportStreamer,
   lockRepository: MongoLockRepository,
   objectStoreClient: PlayObjectStoreClient,
-  sdesService: SDESService/*,
+  sdesService: SDESService /*,
   fraudReportRepository: FraudReportRepository*/
 )(implicit executionContext: ExecutionContext, actorSystem: ActorSystem)
     extends Configured("objectStorageWorker") {
@@ -97,8 +97,8 @@ class ObjectStorageWorker @Inject() (
           logger.debug("Attempting lock.")
           for {
             lockGained <- lockRepository.takeLock(lockID, owner, 1.hours)
-            summary <- storeObject(correlationID, extractTime, fileName) if lockGained
-            _ <- lockRepository.releaseLock(lockID, owner)
+            summary    <- storeObject(correlationID, extractTime, fileName) if lockGained
+            _          <- lockRepository.releaseLock(lockID, owner)
           } yield {
             notifySDES(correlationID, fileName, summary)
             // TODO: update unprocessed reports with cid (maybe in the streamer?)

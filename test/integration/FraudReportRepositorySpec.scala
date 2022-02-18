@@ -87,7 +87,7 @@ class FraudReportRepositorySpec extends IntegrationSpecCommonBase with DefaultPl
         val inputData = exampleData
         running(app) {
 
-          val document = repository.insert(inputData).futureValue.right.get
+          val document = repository.insert(inputData).futureValue
 
           inside(document) {
             case FraudReport(body, _, _, _, _id) =>

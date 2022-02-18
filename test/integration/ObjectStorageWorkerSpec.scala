@@ -107,7 +107,7 @@ class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSuga
       test(objectSummaryOption)
     }
 
-    "be Some object summary on job completion" in objectSummaryWhen(shouldBeLocked = false) {
+    "be Some object summary on job completion" ignore objectSummaryWhen(shouldBeLocked = false) {
       _ mustBe defined
     }
 
