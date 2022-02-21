@@ -66,10 +66,8 @@ class ObjectStorageWorker @Inject() (
   private val informationType: String =
     configuration.get[String]("services.sdes.information-type")
 
-  private val fileLocationBaseUrl: String =
-    configuration.get[String]("services.sdes.file-location-base-url")
-
-  private val objectStoreLocationPrefix: String = s"$fileLocationBaseUrl/object-store/object/ris-kana/"
+  private val fileLocationUrl: String =
+    configuration.get[String]("services.sdes.file-location-url")
 
   logger.info(s"First job in $delay s to repeat every $interval s.")
 
@@ -129,6 +127,7 @@ class ObjectStorageWorker @Inject() (
     val notifyRequest = createNotifyRequest(objWithSummary, fileName, correlationID)
     sdesService.fileNotify(notifyRequest).onComplete {
       case Success(_) =>
+        logger.info(s"SDES has been notified of file :: ${fileName}  with correlationId::$correlationID")
         fraudReportRepository.updateUnprocessed(correlationID)
       case Failure(exception) =>
         logger.error(s"Error in notifying SDES about file :: $fileName correlationId:: $correlationID.", exception)
@@ -145,7 +144,7 @@ class ObjectStorageWorker @Inject() (
       FileMetaData(
         recipientOrSender,
         fileName,
-        s"$objectStoreLocationPrefix${objSummary.location.asUri}",
+        s"$fileLocationUrl${objSummary.location.asUri}",
         FileChecksum(value = objSummary.contentMd5.value),
         objSummary.contentLength,
         List()

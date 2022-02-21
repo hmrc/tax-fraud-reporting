@@ -16,15 +16,14 @@
 
 package integration
 
-import com.typesafe.config.ConfigFactory
 import org.apache.http.HttpStatus
 import org.scalatest.concurrent.ScalaFutures.whenReady
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import play.api.{Application, Configuration}
 import play.libs.Json
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxfraudreporting.models.sdes.{FileAudit, FileChecksum, FileMetaData, SDESFileNotifyRequest}
@@ -32,16 +31,9 @@ import uk.gov.hmrc.taxfraudreporting.services.SDESService
 
 class SDESServiceSpec extends AnyWordSpec with Matchers with WiremockSupport with GuiceOneServerPerSuite {
 
-  val config = Configuration(ConfigFactory.parseString(s"""
-                                                        | microservice.services.sdes {
-                                                        |   host = $host
-                                                        |   port = $wiremockPort
-                                                        | }
-                                                        |""".stripMargin))
-
   override lazy val app: Application =
     GuiceApplicationBuilder()
-      .configure(config)
+      .configure("microservice.services.sdes.host" -> host, "microservice.services.sdes.port" -> wiremockPort)
       .build()
 
   val sdesService = app.injector.instanceOf[SDESService]

@@ -47,14 +47,8 @@ class SDESServiceImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfi
       response =>
         response.status match {
           case NO_CONTENT =>
-            logger.info(
-              s"SDES has been notified of file :: ${fileNotifyRequest.file.name}  with correlationId::${fileNotifyRequest.audit.correlationID}"
-            )
             Future.successful(())
           case status =>
-            logger.error(
-              s"Received a non 204 status from SDES when notified about file :: ${fileNotifyRequest.file.name}  with correlationId::${fileNotifyRequest.audit.correlationID}. Status: $status, body: ${response.body}"
-            )
             Future.failed(
               new Exception(s"Exception in notifying SDES. Received http status: $status body: ${response.body}")
             )
