@@ -21,8 +21,7 @@ object AppDependencies {
     "org.scalatestplus"      %% "mockito-3-4"             % "3.2.3.0" % Test,
     "org.scalamock"          %% "scalamock"               % "5.2.0"   % Test,
     "org.scalacheck"         %% "scalacheck"              % "1.15.4" % Test,
-    "org.scalatestplus"      %% "scalacheck-1-15"         % "3.2.9.0" % Test/*,
-    "com.github.tomakehurst"  %  "wiremock-jre8"          % "2.27.2"  % "it"*/
+    "org.scalatestplus"      %% "scalacheck-1-15"         % "3.2.9.0" % Test
   )
 
 }

@@ -34,6 +34,7 @@ import uk.gov.hmrc.objectstore.client.Path.{Directory, File}
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5}
 import uk.gov.hmrc.taxfraudreporting.models.Error
+import uk.gov.hmrc.taxfraudreporting.repositories.FraudReportRepository
 import uk.gov.hmrc.taxfraudreporting.services.{FraudReportStreamer, ObjectStorageWorker, SDESService}
 
 import scala.concurrent.duration.DurationInt
@@ -81,6 +82,8 @@ class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSuga
       } thenReturn
         EitherT.right[Error](Future.successful(()))
 
+      val mockFraudReportRepository = mock[FraudReportRepository]
+
       if (shouldBeLocked)
         await(lockRepository.takeLock("lockID", "owner", 1.hours))
 
@@ -96,7 +99,8 @@ class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSuga
           mockFraudReportStreamer,
           lockRepository,
           mockObjectStoreClient,
-          mockSDESService
+          mockSDESService,
+          mockFraudReportRepository
         ) {
           override val delay = 0
         }

@@ -33,6 +33,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.{DurationInt, DurationLong}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
+import scala.util.{Failure, Success}
 
 @Singleton
 class ObjectStorageWorker @Inject() (
@@ -40,8 +41,8 @@ class ObjectStorageWorker @Inject() (
   fraudReportStreamer: FraudReportStreamer,
   lockRepository: MongoLockRepository,
   objectStoreClient: PlayObjectStoreClient,
-  sdesService: SDESService/*,
-  fraudReportRepository: FraudReportRepository*/
+  sdesService: SDESService,
+  fraudReportRepository: FraudReportRepository
 )(implicit executionContext: ExecutionContext, actorSystem: ActorSystem)
     extends Configured("objectStorageWorker") {
   private val logger = Logger(getClass)
@@ -101,8 +102,6 @@ class ObjectStorageWorker @Inject() (
                 val fileName      = getFileName(extractTime)
                 storeObject(correlationID, extractTime, fileName) map { objWithSummary =>
                   notifySDES(correlationID, fileName, objWithSummary)
-                  //TODO: update
-                 // fraudReportRepository.listUnprocessed
                   Some(objWithSummary)
                 }
               } else {
@@ -126,11 +125,18 @@ class ObjectStorageWorker @Inject() (
       .toMat(Sink foreach logResult)(Keep.left)
       .run()
 
-  private def notifySDES(correlationID: UUID, fileName: String, objWithSummary: ObjectSummaryWithMd5) = {
+  private def notifySDES(correlationID: UUID, fileName: String, objWithSummary: ObjectSummaryWithMd5): Unit = {
     val notifyRequest = createNotifyRequest(objWithSummary, fileName, correlationID)
-    sdesService.fileNotify(notifyRequest).value foreach {
-      case Left(error) =>
+    sdesService.fileNotify(notifyRequest).value onComplete {
+      case Success(Right(_)) =>
+        logger.info(s"Successfully notified SDES about file :: $fileName correlationId:: $correlationID.")
+        fraudReportRepository.updateUnprocessed(correlationID)
+      case Success(Left(error)) =>
         logger.warn(s"Error in notifying SDES about file :: $fileName correlationId:: $correlationID. Error:: $error")
+      case Failure(exception) =>
+        logger.warn(
+          s"Error in notifying SDES about file :: $fileName correlationId:: $correlationID. Exception:: $exception"
+        )
     }
   }
 

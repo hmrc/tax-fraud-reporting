@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxfraudreporting.services
 
 import cats.data.EitherT
 import cats.instances.future._
+import org.apache.http.HttpStatus
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -71,11 +72,11 @@ class SDESServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
       }
 
       "the call to notify sdes about created file returns with a 500 response" in {
-        testIsError(Right(HttpResponse(500, "")))
+        testIsError(Right(HttpResponse(HttpStatus.SC_INTERNAL_SERVER_ERROR, "")))
       }
 
       "the call to notify sdes about created file returns with a 400 response" in {
-        testIsError(Right(HttpResponse(400, "")))
+        testIsError(Right(HttpResponse(HttpStatus.SC_BAD_REQUEST, "")))
       }
 
     }
@@ -83,7 +84,7 @@ class SDESServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
     "return successfully" when {
 
       " the response is no content" in {
-        mockNotifyFile(fileNotifyRequest)(Right(HttpResponse(204, "")))
+        mockNotifyFile(fileNotifyRequest)(Right(HttpResponse(HttpStatus.SC_NO_CONTENT, "")))
         val result = await(service.fileNotify(fileNotifyRequest).value)
         result shouldBe (Right(()))
       }

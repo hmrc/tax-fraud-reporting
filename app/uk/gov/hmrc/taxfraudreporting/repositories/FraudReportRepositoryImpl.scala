@@ -17,15 +17,14 @@
 package uk.gov.hmrc.taxfraudreporting.repositories
 
 import com.google.inject.{Inject, Singleton}
-import org.bson.UuidRepresentation
-import org.bson.codecs.UuidCodec
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.model.{IndexModel, IndexOptions, Updates}
+import org.mongodb.scala.model.{IndexModel, Updates}
+import org.mongodb.scala.result.UpdateResult
 import org.mongodb.scala.{FindObservable, SingleObservable}
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.JsValue
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.taxfraudreporting.models.FraudReport
 import uk.gov.hmrc.taxfraudreporting.services.JsonValidationService
 
@@ -40,8 +39,7 @@ class FraudReportRepositoryImpl @Inject() (mongoComponent: MongoComponent, valid
       collectionName = "fraudReports",
       mongoComponent = mongoComponent,
       domainFormat = FraudReport.format,
-      indexes = Seq(IndexModel(ascending("correlationId"), IndexOptions().name("isProcessed"))),
-      extraCodecs = Seq(new UuidCodec(UuidRepresentation.STANDARD))
+      indexes = Seq("correlationId", "isProcessed") map { name => IndexModel(ascending(name)) }
     ) with FraudReportRepository {
 
   private val validator = validationService getValidator "fraud-report.schema"
@@ -71,8 +69,7 @@ class FraudReportRepositoryImpl @Inject() (mongoComponent: MongoComponent, valid
   def countUnprocessed: SingleObservable[Long] =
     collection countDocuments unprocessed
 
-  def updateUnprocessed(correlationId: UUID) = {
+  def updateUnprocessed(correlationId: UUID): Future[UpdateResult] =
     collection.updateMany(unprocessed, Updates.set("correlationId", correlationId.toString)).toFuture()
-  }
 
 }

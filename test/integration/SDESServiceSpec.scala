@@ -26,6 +26,7 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.api.{Application, Configuration}
 import play.libs.Json
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.taxfraudreporting.models.Error
 import uk.gov.hmrc.taxfraudreporting.models.sdes.{FileAudit, FileChecksum, FileMetaData, SDESFileNotifyRequest}
 import uk.gov.hmrc.taxfraudreporting.services.SDESService
 
@@ -46,7 +47,7 @@ class SDESServiceSpec extends AnyWordSpec with Matchers with WiremockSupport wit
   val sdesService = app.injector.instanceOf[SDESService]
 
   val fileNotifyRequest = SDESFileNotifyRequest(
-    "fraud-reportin",
+    "fraud-reporting",
     FileMetaData(
       "tax-fraud-reporting",
       "file1.dat",
@@ -58,15 +59,27 @@ class SDESServiceSpec extends AnyWordSpec with Matchers with WiremockSupport wit
     FileAudit("uuid")
   )
 
+  val sdesUrl = "/sdes-stub/notification/fileready"
+  val json    = Json.toJson(fileNotifyRequest).toPrettyString
+
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "SDESServiceSpec" should {
+
     "successfully notify SDES service with the details of file on ObjectStore" in {
-      val sdesUrl = "/sdes-stub/notification/fileready"
-      val json    = Json.toJson(fileNotifyRequest).toPrettyString
-      stubPost(sdesUrl, HttpStatus.SC_NO_CONTENT, json)
+      stubPost(sdesUrl, json, HttpStatus.SC_NO_CONTENT)
       val notificationResponse = sdesService.fileNotify(fileNotifyRequest)
-      await(notificationResponse.value) shouldBe Right()
+      await(notificationResponse.value) shouldBe Right(())
+    }
+
+    "capture error when there's failure in notifying SDES service with the details of file on ObjectStore" in {
+      val httpErrorStatus   = HttpStatus.SC_INTERNAL_SERVER_ERROR
+      val httpErrorResponse = "Internal Server Error"
+      stubPostWithResponse(sdesUrl, json, httpErrorStatus, httpErrorResponse)
+      val notificationResponse = sdesService.fileNotify(fileNotifyRequest)
+      await(notificationResponse.value) shouldBe Left(
+        Error(s"Call to notify SDES came back with status:: $httpErrorStatus, $httpErrorResponse")
+      )
     }
   }
 }

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxfraudreporting.repositories
 
 import com.google.inject.ImplementedBy
+import org.mongodb.scala.result.UpdateResult
 import org.mongodb.scala.{FindObservable, SingleObservable}
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.taxfraudreporting.models.FraudReport
@@ -36,4 +37,6 @@ trait FraudReportRepository {
   def listUnprocessed: FindObservable[FraudReport]
 
   def countUnprocessed: SingleObservable[Long]
+
+  def updateUnprocessed(correlationId: UUID): Future[UpdateResult]
 }

@@ -18,7 +18,7 @@ package integration
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, equalToJson, post, stubFor, urlMatching}
+import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
@@ -63,11 +63,18 @@ trait WiremockSupport extends BeforeAndAfterEach with BeforeAndAfterAll {
 
   override protected def beforeEach(): Unit = resetWiremock()
 
-  def stubPost(url: String, status: Integer, requestJson: String): StubMapping =
+  def stubPost(url: String, requestJson: String, status: Integer): StubMapping =
     stubFor(
       post(urlMatching(url))
         .withRequestBody(equalToJson(requestJson))
         .willReturn(aResponse().withStatus(status))
+    )
+
+  def stubPostWithResponse(url: String, requestJson: String, status: Integer, response: String): StubMapping =
+    stubFor(
+      post(urlMatching(url))
+        .withRequestBody(equalToJson(requestJson))
+        .willReturn(aResponse().withStatus(status).withBody(response))
     )
 
 }

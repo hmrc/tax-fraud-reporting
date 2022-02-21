@@ -16,7 +16,9 @@
 
 package integration
 
+import org.mongodb.scala.model.{Filters, Updates}
 import org.scalatest.Inside.inside
+import org.scalatest.OptionValues
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsObject, Json}
@@ -29,7 +31,8 @@ import uk.gov.hmrc.taxfraudreporting.services.JsonValidationService
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 
-class FraudReportRepositorySpec extends IntegrationSpecCommonBase with DefaultPlayMongoRepositorySupport[FraudReport] {
+class FraudReportRepositorySpec
+    extends IntegrationSpecCommonBase with DefaultPlayMongoRepositorySupport[FraudReport] with OptionValues {
   private implicit val ec: ExecutionContext = injector.instanceOf[ExecutionContext]
   private val validationService             = injector.instanceOf[JsonValidationService]
 
@@ -55,7 +58,7 @@ class FraudReportRepositorySpec extends IntegrationSpecCommonBase with DefaultPl
     new GuiceApplicationBuilder()
 
   "a fraud report repository" should {
-    List("business") foreach { dataName =>
+    List("business", "person") foreach { dataName =>
       val fileName    = s"example-$dataName.json"
       val stream      = getClass.getClassLoader getResourceAsStream fileName
       val exampleData = (Json parse stream).as[JsObject]
@@ -82,22 +85,30 @@ class FraudReportRepositorySpec extends IntegrationSpecCommonBase with DefaultPl
         }
       }
 
-      s"update unprocessed reports for $dataName with correlation id" in {
+      s"update unprocessed $dataName reports with correlation id" in {
         await(repository.collection.drop().toFuture())
 
         val app       = builder.build()
         val inputData = exampleData
         running(app) {
 
-          val document = repository.insert(inputData).futureValue.right.get
+          val unprocessedDocument = repository.insert(inputData).futureValue.right.get
 
-          inside(document) {
-            case FraudReport(body, _, _, _, _id) =>
-              _id mustEqual document._id
-              body mustEqual inputData
-          }
-          val eventualResult = repository.updateUnprocessed(UUID.randomUUID()).futureValue
-          println(s">>>>>>>>>>> Eventual result: $eventualResult")
+          val docToSetAsProcessed = repository.insert(inputData).futureValue.right.get
+          val updatedResult = repository.collection.updateOne(
+            Filters.equal("_id", docToSetAsProcessed._id.toString),
+            Updates.set("isProcessed", true)
+          ).toFuture().futureValue
+          updatedResult.getModifiedCount mustBe 1
+
+          val correlationId  = UUID.randomUUID()
+          val eventualResult = repository.updateUnprocessed(correlationId).futureValue
+          eventualResult.getModifiedCount mustBe 1
+
+          val updated = repository.listUnprocessed.toFuture().futureValue
+          updated.size mustBe 1
+          updated.head._id mustBe unprocessedDocument._id
+          updated.head.correlationId.value should be(correlationId)
         }
       }
     }
