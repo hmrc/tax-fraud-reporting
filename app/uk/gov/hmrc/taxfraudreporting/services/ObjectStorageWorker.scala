@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxfraudreporting.services
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Keep, Sink, SinkQueueWithCancel, Source}
+import org.mongodb.scala.result.UpdateResult
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.lock.MongoLockRepository
@@ -33,7 +34,6 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.{DurationInt, DurationLong}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
-import scala.util.{Failure, Success}
 
 @Singleton
 class ObjectStorageWorker @Inject() (
@@ -98,10 +98,10 @@ class ObjectStorageWorker @Inject() (
                 val correlationID = UUID.randomUUID()
                 val extractTime   = LocalDateTime.now()
                 val fileName      = getFileName(extractTime)
-                storeObject(correlationID, extractTime, fileName) map { objWithSummary =>
-                  notifySDES(correlationID, fileName, objWithSummary)
-                  Some(objWithSummary)
-                }
+                for {
+                  summary <- storeObject(correlationID, extractTime, fileName)
+                  _       <- notifySDES(correlationID, fileName, summary)
+                } yield Some(summary)
               } else {
                 logger.info("Error occurred trying to take lock.")
                 Future(None)
@@ -123,15 +123,13 @@ class ObjectStorageWorker @Inject() (
       .toMat(Sink foreach logResult)(Keep.left)
       .run()
 
-  private def notifySDES(correlationID: UUID, fileName: String, objWithSummary: ObjectSummaryWithMd5): Unit = {
+  private def notifySDES(
+    correlationID: UUID,
+    fileName: String,
+    objWithSummary: ObjectSummaryWithMd5
+  ): Future[UpdateResult] = {
     val notifyRequest = createNotifyRequest(objWithSummary, fileName, correlationID)
-    sdesService.fileNotify(notifyRequest).onComplete {
-      case Success(_) =>
-        logger.info(s"SDES has been notified of file :: ${fileName}  with correlationId::$correlationID")
-        fraudReportRepository.updateUnprocessed(correlationID)
-      case Failure(exception) =>
-        logger.error(s"Error in notifying SDES about file :: $fileName correlationId:: $correlationID.", exception)
-    }
+    sdesService.fileNotify(notifyRequest).flatMap(_ => fraudReportRepository.updateUnprocessed(correlationID))
   }
 
   private def createNotifyRequest(

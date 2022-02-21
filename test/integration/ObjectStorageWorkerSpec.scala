@@ -21,6 +21,7 @@ import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
+import org.mongodb.scala.result.UpdateResult
 import org.scalatest.Assertion
 import org.scalatest.OptionValues.convertOptionToValuable
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
@@ -79,6 +80,10 @@ class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSuga
         Future.successful(())
 
       val mockFraudReportRepository = mock[FraudReportRepository]
+      when {
+        mockFraudReportRepository.updateUnprocessed(any())
+      } thenReturn
+        Future.successful((mock[UpdateResult]))
 
       if (shouldBeLocked)
         await(lockRepository.takeLock("lockID", "owner", 1.hours))
