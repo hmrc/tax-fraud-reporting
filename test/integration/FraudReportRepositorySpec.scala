@@ -90,9 +90,9 @@ class FraudReportRepositorySpec
         val inputData = exampleData
         running(app) {
 
-          val unprocessedDocument = repository.insert(inputData).futureValue.right.get
+          val unprocessedDocument = repository.insert(inputData).futureValue
 
-          val docToSetAsProcessed = repository.insert(inputData).futureValue.right.get
+          val docToSetAsProcessed = repository.insert(inputData).futureValue
           val updatedResult = repository.collection.updateOne(
             Filters.equal("_id", docToSetAsProcessed._id.toString),
             Updates.set("isProcessed", true)
