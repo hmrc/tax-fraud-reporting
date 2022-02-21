@@ -26,7 +26,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.api.{Application, Configuration}
 import play.libs.Json
-import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxfraudreporting.models.sdes.{FileAudit, FileChecksum, FileMetaData, SDESFileNotifyRequest}
 import uk.gov.hmrc.taxfraudreporting.services.SDESService
 
@@ -78,7 +78,8 @@ class SDESServiceSpec extends AnyWordSpec with Matchers with WiremockSupport wit
       stubPostWithResponse(sdesUrl, json, httpErrorStatus, httpErrorResponse)
       val notificationResponse = sdesService.fileNotify(fileNotifyRequest)
       whenReady(notificationResponse.failed) { e =>
-        e shouldBe a[UpstreamErrorResponse]
+        e shouldBe an[Exception]
+        e.getMessage shouldBe (s"Exception in notifying SDES. Received http status: $httpErrorStatus body: $httpErrorResponse")
       }
     }
   }

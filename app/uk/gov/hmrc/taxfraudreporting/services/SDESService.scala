@@ -22,7 +22,7 @@ import play.api.{Configuration, Logging}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.taxfraudreporting.models.sdes.SDESFileNotifyRequest
-
+import uk.gov.hmrc.http.HttpReads.Implicits._
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[SDESServiceImpl])
@@ -43,7 +43,7 @@ class SDESServiceImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfi
   private val sdesUrl: String = s"$baseUrl/$apiLocation/notification/fileready"
 
   override def fileNotify(fileNotifyRequest: SDESFileNotifyRequest)(implicit hc: HeaderCarrier): Future[Unit] =
-    http.POST[SDESFileNotifyRequest, HttpResponse](sdesUrl, fileNotifyRequest).map {
+    http.POST[SDESFileNotifyRequest, HttpResponse](sdesUrl, fileNotifyRequest).flatMap {
       response =>
         response.status match {
           case NO_CONTENT =>
