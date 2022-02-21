@@ -18,6 +18,7 @@ package integration
 
 import com.typesafe.config.ConfigFactory
 import org.apache.http.HttpStatus
+import org.scalatest.concurrent.ScalaFutures.whenReady
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
@@ -25,8 +26,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.api.{Application, Configuration}
 import play.libs.Json
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxfraudreporting.models.Error
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.taxfraudreporting.models.sdes.{FileAudit, FileChecksum, FileMetaData, SDESFileNotifyRequest}
 import uk.gov.hmrc.taxfraudreporting.services.SDESService
 
@@ -69,17 +69,17 @@ class SDESServiceSpec extends AnyWordSpec with Matchers with WiremockSupport wit
     "successfully notify SDES service with the details of file on ObjectStore" in {
       stubPost(sdesUrl, json, HttpStatus.SC_NO_CONTENT)
       val notificationResponse = sdesService.fileNotify(fileNotifyRequest)
-      await(notificationResponse.value) shouldBe Right(())
+      await(notificationResponse) shouldBe ()
     }
 
-    "capture error when there's failure in notifying SDES service with the details of file on ObjectStore" in {
+    "fail when non 204 response is received while notifying SDES service" in {
       val httpErrorStatus   = HttpStatus.SC_INTERNAL_SERVER_ERROR
       val httpErrorResponse = "Internal Server Error"
       stubPostWithResponse(sdesUrl, json, httpErrorStatus, httpErrorResponse)
       val notificationResponse = sdesService.fileNotify(fileNotifyRequest)
-      await(notificationResponse.value) shouldBe Left(
-        Error(s"Call to notify SDES came back with status:: $httpErrorStatus, $httpErrorResponse")
-      )
+      whenReady(notificationResponse.failed) { e =>
+        e shouldBe a[UpstreamErrorResponse]
+      }
     }
   }
 }

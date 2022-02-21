@@ -127,16 +127,11 @@ class ObjectStorageWorker @Inject() (
 
   private def notifySDES(correlationID: UUID, fileName: String, objWithSummary: ObjectSummaryWithMd5): Unit = {
     val notifyRequest = createNotifyRequest(objWithSummary, fileName, correlationID)
-    sdesService.fileNotify(notifyRequest).value onComplete {
-      case Success(Right(_)) =>
-        logger.info(s"Successfully notified SDES about file :: $fileName correlationId:: $correlationID.")
+    sdesService.fileNotify(notifyRequest).onComplete {
+      case Success(_) =>
         fraudReportRepository.updateUnprocessed(correlationID)
-      case Success(Left(error)) =>
-        logger.warn(s"Error in notifying SDES about file :: $fileName correlationId:: $correlationID. Error:: $error")
       case Failure(exception) =>
-        logger.warn(
-          s"Error in notifying SDES about file :: $fileName correlationId:: $correlationID. Exception:: $exception"
-        )
+        logger.error(s"Error in notifying SDES about file :: $fileName correlationId:: $correlationID.", exception)
     }
   }
 

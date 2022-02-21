@@ -16,14 +16,11 @@
 
 package uk.gov.hmrc.taxfraudreporting.services
 
-import cats.data.EitherT
-import cats.instances.future.catsStdInstancesForFuture
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import play.api.Logging
 import play.api.http.Status._
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxfraudreporting.connectors.SDESConnector
-import uk.gov.hmrc.taxfraudreporting.models.Error
+import play.api.{Configuration, Logging}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.taxfraudreporting.models.sdes.SDESFileNotifyRequest
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,30 +28,37 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[SDESServiceImpl])
 trait SDESService {
 
-  def fileNotify(fileNotifyRequest: SDESFileNotifyRequest)(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit]
+  def fileNotify(fileNotifyRequest: SDESFileNotifyRequest)(implicit hc: HeaderCarrier): Future[Unit]
 }
 
 @Singleton
-class SDESServiceImpl @Inject() (sdesConnector: SDESConnector)(implicit ec: ExecutionContext)
-    extends SDESService with Logging {
+class SDESServiceImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfig, config: Configuration)(implicit
+  ec: ExecutionContext
+) extends SDESService with Logging {
 
-  val message: String = "Call to notify SDES came back with status::"
+  val message: String             = "Call to notify SDES came back with status::"
+  private val baseUrl: String     = servicesConfig.baseUrl("sdes")
+  private val apiLocation: String = config.get[String]("services.sdes.location")
 
-  override def fileNotify(
-    fileNotifyRequest: SDESFileNotifyRequest
-  )(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] =
-    sdesConnector
-      .notify(fileNotifyRequest)
-      .subflatMap { response =>
+  private val sdesUrl: String = s"$baseUrl/$apiLocation/notification/fileready"
+
+  override def fileNotify(fileNotifyRequest: SDESFileNotifyRequest)(implicit hc: HeaderCarrier): Future[Unit] =
+    http.POST[SDESFileNotifyRequest, HttpResponse](sdesUrl, fileNotifyRequest).map {
+      response =>
         response.status match {
           case NO_CONTENT =>
             logger.info(
               s"SDES has been notified of file :: ${fileNotifyRequest.file.name}  with correlationId::${fileNotifyRequest.audit.correlationID}"
             )
-            Right(())
-          case rest => Left(Error(s"$message $rest, ${response.body}"))
+            Future.successful(())
+          case status =>
+            logger.error(
+              s"Received a non 204 status from SDES when notified about file :: ${fileNotifyRequest.file.name}  with correlationId::${fileNotifyRequest.audit.correlationID}. Status: $status, body: ${response.body}"
+            )
+            Future.failed(
+              new Exception(s"Exception in notifying SDES. Received http status: $status body: ${response.body}")
+            )
         }
-
-      }
+    }
 
 }
