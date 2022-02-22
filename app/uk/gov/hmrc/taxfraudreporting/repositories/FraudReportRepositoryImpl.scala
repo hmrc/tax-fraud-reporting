@@ -19,7 +19,8 @@ package uk.gov.hmrc.taxfraudreporting.repositories
 import com.google.inject.{Inject, Singleton}
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import org.mongodb.scala.model.{IndexModel, Updates}
+import org.mongodb.scala.result.UpdateResult
 import org.mongodb.scala.{FindObservable, SingleObservable}
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.mongo.MongoComponent
@@ -38,7 +39,7 @@ class FraudReportRepositoryImpl @Inject() (mongoComponent: MongoComponent, valid
       collectionName = "fraudReports",
       mongoComponent = mongoComponent,
       domainFormat = FraudReport.format,
-      indexes = Seq(IndexModel(ascending("correlationId"), IndexOptions().name("isProcessed")))
+      indexes = Seq("correlationId", "isProcessed") map { name => IndexModel(ascending(name)) }
     ) with FraudReportRepository {
 
   private val validator = validationService getValidator "fraud-report.schema"
@@ -67,5 +68,8 @@ class FraudReportRepositoryImpl @Inject() (mongoComponent: MongoComponent, valid
 
   def countUnprocessed: SingleObservable[Long] =
     collection countDocuments unprocessed
+
+  def updateUnprocessed(correlationId: UUID): Future[UpdateResult] =
+    collection.updateMany(unprocessed, Updates.set("correlationId", correlationId.toString)).toFuture()
 
 }

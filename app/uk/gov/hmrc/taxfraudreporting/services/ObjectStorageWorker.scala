@@ -18,14 +18,18 @@ package uk.gov.hmrc.taxfraudreporting.services
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Keep, Sink, SinkQueueWithCancel, Source}
+import org.mongodb.scala.result.UpdateResult
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.lock.MongoLockRepository
 import uk.gov.hmrc.objectstore.client.play.Implicits.{akkaSourceContentWrite, futureMonad}
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{ObjectSummaryWithMd5, Path}
+import uk.gov.hmrc.taxfraudreporting.models.sdes.{FileAudit, FileChecksum, FileMetaData, SDESFileNotifyRequest}
+import uk.gov.hmrc.taxfraudreporting.repositories.FraudReportRepository
 
 import java.time.{LocalDate, LocalDateTime, LocalTime, ZoneOffset}
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.{DurationInt, DurationLong}
 import scala.concurrent.{ExecutionContext, Future}
@@ -36,7 +40,9 @@ class ObjectStorageWorker @Inject() (
   val configuration: Configuration,
   fraudReportStreamer: FraudReportStreamer,
   lockRepository: MongoLockRepository,
-  objectStoreClient: PlayObjectStoreClient
+  objectStoreClient: PlayObjectStoreClient,
+  sdesService: SDESService,
+  fraudReportRepository: FraudReportRepository
 )(implicit executionContext: ExecutionContext, actorSystem: ActorSystem)
     extends Configured("objectStorageWorker") {
   private val logger = Logger(getClass)
@@ -54,12 +60,19 @@ class ObjectStorageWorker @Inject() (
   private val nowEpoch = LocalDateTime.now() toEpochSecond ZoneOffset.UTC
   val delay: Long      = (jobEpoch - nowEpoch + daySecs) % interval
 
+  private val recipientOrSender: String =
+    configuration.get[String]("services.sdes.recipient-or-sender")
+
+  private val informationType: String =
+    configuration.get[String]("services.sdes.information-type")
+
+  private val fileLocationUrl: String =
+    configuration.get[String]("services.sdes.file-location-url")
+
   logger.info(s"First job in $delay s to repeat every $interval s.")
 
-  def storeObject: Future[ObjectSummaryWithMd5] = {
-    val extractTime  = LocalDateTime.now()
-    val fraudReports = fraudReportStreamer.stream(extractTime)
-    val fileName     = getFileName(extractTime)
+  def storeObject(correlationID: UUID, extractTime: LocalDateTime, fileName: String): Future[ObjectSummaryWithMd5] = {
+    val fraudReports = fraudReportStreamer.stream(correlationID, extractTime)
 
     logger.info(s"Storing object $fileName.")
 
@@ -82,7 +95,13 @@ class ObjectStorageWorker @Inject() (
             gainedLock =>
               if (gainedLock) {
                 logger.info("Lock taken successfully.")
-                storeObject map Some.apply
+                val correlationID = UUID.randomUUID()
+                val extractTime   = LocalDateTime.now()
+                val fileName      = getFileName(extractTime)
+                for {
+                  summary <- storeObject(correlationID, extractTime, fileName)
+                  _       <- notifySDES(correlationID, fileName, summary)
+                } yield Some(summary)
               } else {
                 logger.info("Error occurred trying to take lock.")
                 Future(None)
@@ -103,5 +122,32 @@ class ObjectStorageWorker @Inject() (
       .wireTapMat(Sink.queue())(Keep.right)
       .toMat(Sink foreach logResult)(Keep.left)
       .run()
+
+  private def notifySDES(
+    correlationID: UUID,
+    fileName: String,
+    objWithSummary: ObjectSummaryWithMd5
+  ): Future[UpdateResult] = {
+    val notifyRequest = createNotifyRequest(objWithSummary, fileName, correlationID)
+    sdesService.fileNotify(notifyRequest).flatMap(_ => fraudReportRepository.updateUnprocessed(correlationID))
+  }
+
+  private def createNotifyRequest(
+    objSummary: ObjectSummaryWithMd5,
+    fileName: String,
+    uuid: UUID
+  ): SDESFileNotifyRequest =
+    SDESFileNotifyRequest(
+      informationType,
+      FileMetaData(
+        recipientOrSender,
+        fileName,
+        s"$fileLocationUrl${objSummary.location.asUri}",
+        FileChecksum(value = objSummary.contentMd5.value),
+        objSummary.contentLength,
+        List()
+      ),
+      FileAudit(uuid.toString)
+    )
 
 }

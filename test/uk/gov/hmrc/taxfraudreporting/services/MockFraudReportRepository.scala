@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxfraudreporting.services
 
+import org.mongodb.scala.result.UpdateResult
 import org.mongodb.scala.{FindObservable, SingleObservable}
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.taxfraudreporting.models.FraudReport
@@ -42,4 +43,6 @@ class MockFraudReportRepository(succeeding: Boolean) extends FraudReportReposito
   def listUnprocessed: FindObservable[FraudReport] = null
 
   def countUnprocessed: SingleObservable[Long] = _ => {}
+
+  def updateUnprocessed(correlationId: UUID): Future[UpdateResult] = null
 }
