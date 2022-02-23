@@ -56,7 +56,7 @@ class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSuga
 
   private val testString = "qwertyuiop"
 
-  val lock = "lockID"
+  val lock  = "lockID"
   val owner = "owner"
 
   override def beforeEach(): Unit = {

@@ -8,11 +8,13 @@ object AppDependencies {
     "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.12.4",
     "com.github.java-json-tools"    % "json-schema-validator"     % "2.2.14",
     "uk.gov.hmrc.objectstore"      %% "object-store-client-play-28" % "0.39.0",
-    "uk.gov.hmrc"                  %% "internal-auth-client-play-28" % "1.0.0"
+    "uk.gov.hmrc"                  %% "internal-auth-client-play-28" % "1.0.0",
+    "ai.x"                         %% "play-json-extensions"      % "0.42.0"
   )
 
   val test = Seq(
     "uk.gov.hmrc"            %% "bootstrap-test-play-28"  % "5.16.0"  % Test,
+    "uk.gov.hmrc"            %% "government-gateway-test" % "4.6.0-play-28" % "test,it",
     "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-28" % "0.56.0"  % Test,
     "com.vladsch.flexmark"    % "flexmark-all"            % "0.36.8"  % "test, it",
     "org.scalatestplus.play" %% "scalatestplus-play"      % "5.0.0"   % "test,it",
