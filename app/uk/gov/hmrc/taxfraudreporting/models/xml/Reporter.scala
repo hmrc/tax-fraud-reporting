@@ -21,18 +21,18 @@ import play.api.libs.json.{Json, OFormat}
 final case class Reporter(
   forename: Option[String] = None,
   surname: Option[String] = None,
-  telephone_Number: Option[String] = None,
-  email_Address: Option[String] = None,
-  memorable_Word: Option[String] = None
+  telephoneNumber: Option[String] = None,
+  emailAddress: Option[String] = None,
+  memorableWord: Option[String] = None
 ) extends FraudReportXml {
 
   def toXml: xml.Elem =
     <reporter>
       {optionToXml(forename, "forename")}
       {optionToXml(surname, "surname")}
-      {optionToXml(telephone_Number, "telephone_Number")}
-      {optionToXml(email_Address, "email_Address")}
-      {optionToXml(memorable_Word, "memorable_Word")}
+      {optionToXml(telephoneNumber, "telephone_Number")}
+      {optionToXml(emailAddress, "email_Address")}
+      {optionToXml(memorableWord, "memorable_Word")}
     </reporter>
 
 }

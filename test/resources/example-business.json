@@ -1,33 +1,28 @@
 {
-  "correlationID": "e18518f6-1f2c-4c63-9884-0fc1e10ea329",
-  "submitted": "2021-08-20T14:29:10Z",
   "activityType": "CJRS",
   "nominals": [{
     "business": {
-      "business_Name": "",
-      "business_Type": "",
-      "employee_Count": 100,
+      "businessName": "",
+      "businessType": "",
       "address": {
-        "address_Line_1": "111",
-        "address_Line_2": "",
-        "address_Line_3": "",
-        "town_City": "",
+        "addressLine1": "111",
+        "addressLine2": "",
+        "addressLine3": "",
+        "townCity": "",
         "postcode": "EH12 9JE",
         "country": "",
         "general_Location": ""
       },
       "contactDetails": {
-        "landline_Number": "12345678901",
-        "mobile_Number": "09876543212",
-        "email_Address": "shine.alex@digital.hmrc.gov.uk"
+        "landlineNumber": "12345678901",
+        "mobileNumber": "09876543212",
+        "emailAddress": "shine.alex@digital.hmrc.gov.uk"
       },
-      "businessTradingYears": "Over 5 years",
       "connectionType": "My employer",
       "isCurrent": false,
-      "VAT_Number": "0987654321",
-      "ct_Utr": "1235476890",
-      "employee_Number": "123/AB456",
-      "sa_Utr": "0987654321"
+      "businessVatNumber": "0987654321",
+      "ctUtr": "1235476890",
+      "employeeRefNo": "123/AB456"
     }
   }],
   "valueFraud": 10000,
@@ -38,9 +33,9 @@
   "reporter": {
     "forename": "",
     "surname": "",
-    "telephone_Number": "",
-    "email_Address": "modestas.ruksnaitis@digital.hmrc.gov.uk",
-    "memorable_Word": ""
+    "telephoneNumber": "",
+    "emailAddress": "modestas.ruksnaitis@digital.hmrc.gov.uk",
+    "memorableWord": ""
   },
   "hasEvidence": true
 }

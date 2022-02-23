@@ -88,14 +88,13 @@ trait GenDriven {
 
   private val addressOptions = Gen option {
     for {
-      line1           <- stringOptions
-      line2           <- stringOptions
-      line3           <- stringOptions
-      townOrCity      <- stringOptions
-      postCode        <- stringOptions
-      country         <- stringOptions
-      generalLocation <- stringOptions
-    } yield Address(line1, line2, line3, townOrCity, postCode, country, generalLocation)
+      line1      <- stringOptions
+      line2      <- stringOptions
+      line3      <- stringOptions
+      townOrCity <- stringOptions
+      postCode   <- stringOptions
+      country    <- stringOptions
+    } yield Address(line1, line2, line3, townOrCity, postCode, country)
   }
 
   private val names = for {
