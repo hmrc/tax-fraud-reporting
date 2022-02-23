@@ -18,8 +18,9 @@ package uk.gov.hmrc.taxfraudreporting.services
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Keep, Sink, SinkQueueWithCancel, Source}
+import akka.stream.{ActorAttributes, Supervision}
 import org.mongodb.scala.result.UpdateResult
-import play.api.{Configuration, Logger}
+import play.api.{Configuration, Logging}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.lock.MongoLockRepository
 import uk.gov.hmrc.objectstore.client.play.Implicits.{akkaSourceContentWrite, futureMonad}
@@ -34,6 +35,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.{DurationInt, DurationLong}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
+import scala.util.control.NonFatal
 
 @Singleton
 class ObjectStorageWorker @Inject() (
@@ -44,8 +46,16 @@ class ObjectStorageWorker @Inject() (
   sdesService: SDESService,
   fraudReportRepository: FraudReportRepository
 )(implicit executionContext: ExecutionContext, actorSystem: ActorSystem)
-    extends Configured("objectStorageWorker") {
-  private val logger = Logger(getClass)
+    extends Configured("objectStorageWorker") with Logging {
+
+  private val supervisionStrategy: Supervision.Decider = {
+    case NonFatal(e) =>
+      logger.error("Object storage worker failed", e)
+      Supervision.resume
+    case e =>
+      logger.error("Object storage worker failed", e)
+      Supervision.stop
+  }
 
   implicit private val headerCarrier: HeaderCarrier = HeaderCarrier()
 
@@ -54,7 +64,7 @@ class ObjectStorageWorker @Inject() (
   private val daySecs = 86400
 
   private val interval  = daySecs / configured("frequency").toInt
-  private val timeOfJob = LocalTime parse configured("timeOfJob")
+  private val timeOfJob = configured.get("timeOfJob").map(LocalTime.parse).getOrElse(LocalTime.now)
 
   private val jobEpoch = LocalDate.now() atTime timeOfJob toEpochSecond ZoneOffset.UTC
   private val nowEpoch = LocalDateTime.now() toEpochSecond ZoneOffset.UTC
@@ -91,7 +101,7 @@ class ObjectStorageWorker @Inject() (
           logger.info("Job already locked; leaving to other worker.")
           Future(None)
         } else
-          lockRepository.takeLock(lockID, owner, 1.hours) flatMap {
+          lockRepository.takeLock(lockID, owner, 1.minute) flatMap {
             gainedLock =>
               if (gainedLock) {
                 logger.info("Lock taken successfully.")
@@ -101,6 +111,7 @@ class ObjectStorageWorker @Inject() (
                 for {
                   summary <- storeObject(correlationID, extractTime, fileName)
                   _       <- notifySDES(correlationID, fileName, summary)
+                  _       <- lockRepository.releaseLock(lockID, owner)
                 } yield Some(summary)
               } else {
                 logger.info("Error occurred trying to take lock.")
@@ -110,17 +121,13 @@ class ObjectStorageWorker @Inject() (
     }
   }
 
-  private def logResult(summaryOpt: Option[ObjectSummaryWithMd5]): Unit =
-    summaryOpt match {
-      case Some(summary) => logger.info(s"Stored object: ${summary.contentMd5}.")
-      case None          => logger.info("Lock not acquired.")
-    }
-
-  val queue: SinkQueueWithCancel[Option[ObjectSummaryWithMd5]] =
-    Source.tick(delay seconds, interval seconds, job)
-      .flatMapConcat(Source.future)
+  val tap: SinkQueueWithCancel[Option[ObjectSummaryWithMd5]] =
+    Source
+      .tick(delay seconds, interval seconds, ())
+      .mapAsync(1)(_ => job)
       .wireTapMat(Sink.queue())(Keep.right)
-      .toMat(Sink foreach logResult)(Keep.left)
+      .toMat(Sink.foreach(logResult))(Keep.left)
+      .withAttributes(ActorAttributes.supervisionStrategy(supervisionStrategy))
       .run()
 
   private def notifySDES(
@@ -149,5 +156,11 @@ class ObjectStorageWorker @Inject() (
       ),
       FileAudit(uuid.toString)
     )
+
+  private def logResult(summaryOpt: Option[ObjectSummaryWithMd5]): Unit =
+    summaryOpt match {
+      case Some(summary) => logger.info(s"Stored object: ${summary.contentMd5}.")
+      case None          => logger.info("Lock not acquired.")
+    }
 
 }

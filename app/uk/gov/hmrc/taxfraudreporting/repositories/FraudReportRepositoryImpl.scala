@@ -18,41 +18,31 @@ package uk.gov.hmrc.taxfraudreporting.repositories
 
 import com.google.inject.{Inject, Singleton}
 import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.IndexModel
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.{IndexModel, Updates}
 import org.mongodb.scala.result.UpdateResult
 import org.mongodb.scala.{FindObservable, SingleObservable}
-import play.api.libs.json.JsValue
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-import uk.gov.hmrc.taxfraudreporting.models.FraudReport
-import uk.gov.hmrc.taxfraudreporting.services.JsonValidationService
+import uk.gov.hmrc.taxfraudreporting.models.{FraudReport, FraudReportBody}
 
-import java.time.LocalDateTime
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class FraudReportRepositoryImpl @Inject() (mongoComponent: MongoComponent, validationService: JsonValidationService)(
-  implicit val ec: ExecutionContext
-) extends PlayMongoRepository[FraudReport](
+class FraudReportRepositoryImpl @Inject() (mongoComponent: MongoComponent)(implicit val ec: ExecutionContext)
+    extends PlayMongoRepository[FraudReport](
       collectionName = "fraudReports",
       mongoComponent = mongoComponent,
       domainFormat = FraudReport.format,
       indexes = Seq("correlationId", "isProcessed") map { name => IndexModel(ascending(name)) }
     ) with FraudReportRepository {
 
-  private val validator = validationService getValidator "fraud-report.schema"
+  def insert(reportBody: FraudReportBody): Future[FraudReport] = {
+    val fraudReport = FraudReport(reportBody)
 
-  def insert(reportBody: JsValue): Future[Either[List[String], FraudReport]] = {
-    val validationErrors = validator validate reportBody
-
-    if (validationErrors.isEmpty) {
-      val fraudReport = FraudReport(reportBody, LocalDateTime.now())
-
-      collection.insertOne(fraudReport).toFuture map { _ => Right(fraudReport) }
-    } else
-      Future.successful(Left(validationErrors))
+    collection.insertOne(fraudReport).toFuture map { _ => fraudReport }
   }
 
   def get(id: UUID): Future[Option[FraudReport]] =

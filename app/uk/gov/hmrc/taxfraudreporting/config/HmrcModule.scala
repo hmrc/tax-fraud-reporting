@@ -14,25 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxfraudreporting.models
+package uk.gov.hmrc.taxfraudreporting.config
 
-import play.api.libs.json._
+import play.api.{Configuration, Environment}
+import play.api.inject.{Binding, Module}
+import uk.gov.hmrc.taxfraudreporting.services.ObjectStorageWorker
 
-import java.time.LocalDateTime
-import java.util.UUID
+class HmrcModule extends Module {
 
-final case class FraudReport(
-  body: FraudReportBody,
-  submitted: LocalDateTime = LocalDateTime.now(),
-  isProcessed: Boolean = false,
-  correlationId: Option[UUID] = None,
-  _id: UUID = UUID.randomUUID()
-)
+  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
+    Seq(bind[ObjectStorageWorker].toSelf.eagerly)
 
-object FraudReport {
-
-  implicit val formatUUID: Format[UUID] =
-    Format(_.validate[String] map UUID.fromString, uuid => JsString(uuid.toString))
-
-  implicit val format: OFormat[FraudReport] = Json.format
 }

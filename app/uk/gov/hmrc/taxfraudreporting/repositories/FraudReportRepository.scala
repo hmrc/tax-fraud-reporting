@@ -19,8 +19,7 @@ package uk.gov.hmrc.taxfraudreporting.repositories
 import com.google.inject.ImplementedBy
 import org.mongodb.scala.result.UpdateResult
 import org.mongodb.scala.{FindObservable, SingleObservable}
-import play.api.libs.json.JsValue
-import uk.gov.hmrc.taxfraudreporting.models.FraudReport
+import uk.gov.hmrc.taxfraudreporting.models.{FraudReport, FraudReportBody}
 
 import java.util.UUID
 import scala.concurrent.Future
@@ -28,7 +27,7 @@ import scala.concurrent.Future
 @ImplementedBy(classOf[FraudReportRepositoryImpl])
 trait FraudReportRepository {
 
-  def insert(data: JsValue): Future[Either[List[String], FraudReport]]
+  def insert(data: FraudReportBody): Future[FraudReport]
 
   def get(id: UUID): Future[Option[FraudReport]]
 

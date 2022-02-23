@@ -16,25 +16,23 @@
 
 package uk.gov.hmrc.taxfraudreporting.controllers
 
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.taxfraudreporting.models.FraudReportBody
 import uk.gov.hmrc.taxfraudreporting.repositories.FraudReportRepository
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
-@Singleton()
+@Singleton
 class FraudReportController @Inject() (cc: ControllerComponents, repository: FraudReportRepository)(implicit
   executionContext: ExecutionContext
 ) extends BackendController(cc) {
 
-  def createFraudReport: Action[JsValue] = Action.async(parse.json) { request =>
-    repository.insert(request.body) map { result =>
-      result.fold(
-        errors => BadRequest(Json.obj("errors" -> Json.arr(errors))),
-        _ => Created(Json.obj("success" -> "Fraud report submitted"))
-      )
+  def createFraudReport: Action[FraudReportBody] = Action.async(parse.json[FraudReportBody]) { request =>
+    repository.insert(request.body) map { fraudReport =>
+      Created(Json.obj("statusCode" -> 201, "message" -> s"Fraud report ${fraudReport._id} submitted"))
     }
   }
 

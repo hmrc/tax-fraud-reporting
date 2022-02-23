@@ -26,8 +26,10 @@ import org.scalatest.Assertion
 import org.scalatest.OptionValues.convertOptionToValuable
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.inject.bind
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import play.api.{Configuration, Logger}
+import play.api.{Application, Configuration, Logging}
 import uk.gov.hmrc.mongo.lock.MongoLockRepository
 import uk.gov.hmrc.objectstore.client.Path.{Directory, File}
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
@@ -38,15 +40,13 @@ import uk.gov.hmrc.taxfraudreporting.services.{FraudReportStreamer, ObjectStorag
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
 
-class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSugar {
-  private val logger = Logger(getClass)
+class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSugar with Logging {
 
-  override def afterEach(): Unit = {
-    super.afterEach()
-    logger.info("Releasing lock.")
-    await(lockRepository.releaseLock("lockID", "owner"))
-    logger.info(s"Locks present: ${lockRepository.collection.find().toFuture.futureValue}")
-  }
+  override lazy val app: Application = new GuiceApplicationBuilder()
+    .overrides(
+      // This prevents the object storage worker starting with the application so we can create our own instance for test
+      bind[ObjectStorageWorker].toInstance(mock[ObjectStorageWorker])
+    ).build()
 
   private implicit val executionContext: ExecutionContext = app.injector.instanceOf[ExecutionContext]
   private implicit val actorSystem: ActorSystem           = app.injector.instanceOf[ActorSystem]
@@ -55,6 +55,16 @@ class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSuga
   private val lockRepository = app.injector.instanceOf[MongoLockRepository]
 
   private val testString = "qwertyuiop"
+
+  val lock = "lockID"
+  val owner = "owner"
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    logger.info("Releasing lock.")
+    await(lockRepository.releaseLock(lock, owner))
+    logger.info(s"Locks after: ${lockRepository.collection.find().toFuture.futureValue}")
+  }
 
   "ObjectStorageWorker's materialised value" should {
 
@@ -83,14 +93,14 @@ class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSuga
       when {
         mockFraudReportRepository.updateUnprocessed(any())
       } thenReturn
-        Future.successful((mock[UpdateResult]))
+        Future.successful(mock[UpdateResult])
 
       if (shouldBeLocked)
-        await(lockRepository.takeLock("lockID", "owner", 1.hours))
+        await(lockRepository.takeLock(lock, owner, 1.minute))
 
-      val isLocked = lockRepository.isLocked("lockID", "owner").futureValue
-      logger.info(s"Is locked? $isLocked")
-      logger.info(s"Locks present: ${lockRepository.collection.find().toFuture.futureValue}")
+      val isLocked = lockRepository.isLocked(lock, owner).futureValue
+      logger.info(s"Is locked before? $isLocked")
+      logger.info(s"Locks before: ${lockRepository.collection.find().toFuture.futureValue}")
       logger.info(s"Should be locked? $shouldBeLocked")
       isLocked mustBe shouldBeLocked
 
@@ -106,11 +116,13 @@ class ObjectStorageWorkerSpec extends IntegrationSpecCommonBase with MockitoSuga
           override val delay = 0
         }
 
-      val objectSummaryOption = objectStorageWorker.queue.pull().futureValue.value
+      val objectSummaryOption = objectStorageWorker.tap.pull().futureValue.value
       logger.info(objectSummaryOption.toString)
 
+      logger.info(s"Is locked after? $isLocked")
       test(objectSummaryOption)
     }
+
     "be Some object summary on job completion" in objectSummaryWhen(shouldBeLocked = false) {
       _ mustBe defined
     }
