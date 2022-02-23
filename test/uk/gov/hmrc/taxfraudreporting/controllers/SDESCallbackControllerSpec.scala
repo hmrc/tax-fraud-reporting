@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxfraudreporting.controllers
 
+import akka.actor.ActorSystem
 import ch.qos.logback.classic.Level
 import org.mockito.ArgumentMatchers.{any, eq => equalTo}
 import org.mockito.Mockito.{clearInvocations, verify, verifyNoInteractions, when}
@@ -27,14 +28,15 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfterEach, LoneElement}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsString, JsValue, Json}
+import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import play.api.{Application, Configuration}
 import uk.gov.hmrc.gg.test.LogCapturing
+import uk.gov.hmrc.objectstore.client.Path
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.taxfraudreporting.models.sdes.NotificationStatus.{
   FileProcessed,
@@ -46,14 +48,16 @@ import uk.gov.hmrc.taxfraudreporting.models.sdes.{CallBackNotification, Notifica
 import uk.gov.hmrc.taxfraudreporting.repositories.FraudReportRepository
 
 import java.util.UUID
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
 class SDESCallbackControllerSpec
     extends AnyWordSpec with Matchers with GuiceOneServerPerSuite with LogCapturing with LoneElement
     with BeforeAndAfterEach {
 
-  val mockObjectStoreClient     = mock[PlayObjectStoreClient]
-  val mockFraudReportRepository = mock[FraudReportRepository]
+  implicit val ec: ExecutionContextExecutor = ExecutionContext.global
+  implicit val as: ActorSystem              = ActorSystem()
+  val mockObjectStoreClient                 = mock[PlayObjectStoreClient]
+  val mockFraudReportRepository             = mock[FraudReportRepository]
   when {
     mockObjectStoreClient.deleteObject(any(), any())(any())
   } thenReturn
@@ -77,25 +81,32 @@ class SDESCallbackControllerSpec
 
   val fileName = "fileName1.dat"
 
+  val configuration = app.injector.instanceOf[Configuration]
+  val path          = Path Directory configuration.get[String]("services.objectStorageWorker.path")
+  val filePath      = path file fileName
+
+  val sdesCallbackURL =
+    uk.gov.hmrc.taxfraudreporting.controllers.routes.SDESCallbackController.callback().url
+
   override def beforeEach(): Unit =
     clearInvocations(mockObjectStoreClient, mockFraudReportRepository)
 
   def createCallBackNotification(status: NotificationStatus, fileName: String) =
     CallBackNotification(status, fileName, uuid.toString, None)
 
-  def performActionWithJsonBody(requestBody: JsValue): Future[Result] = {
-    val request = FakeRequest().withBody(requestBody).withHeaders(CONTENT_TYPE -> JSON)
+  def performActionWithJsonBody(requestBody: CallBackNotification): Future[Result] = {
+    val request = FakeRequest("Post", sdesCallbackURL).withBody(requestBody).withHeaders(CONTENT_TYPE -> JSON)
     controller.callback(request)
   }
 
   "POST /create-report" should {
     "return 200, log the details" when {
-      "call back status is FileReady/FileReceived" in {
-        val statuses = List(FileReady, FileReceived)
+      "call back status is FileReady/FileReceived/FileProcessingFailure" in {
+        val statuses = List(FileReady, FileReceived, FileProcessingFailure)
         forAll(statuses) { notificationStatus =>
           withCaptureOfLoggingFrom[SDESCallbackController] { logs =>
             val notification = createCallBackNotification(notificationStatus, fileName)
-            val result       = performActionWithJsonBody(Json.toJson(notification))
+            val result       = performActionWithJsonBody(notification)
             eventually {
               logs.filter(
                 _.getLevel == Level.INFO
@@ -107,48 +118,28 @@ class SDESCallbackControllerSpec
         }
       }
 
-      "and delete file from object store when call back status is FileProcessingFailure" in {
-        withCaptureOfLoggingFrom[SDESCallbackController] { logs =>
-          val notification = createCallBackNotification(FileProcessingFailure, fileName)
-          val result       = performActionWithJsonBody(Json.toJson(notification))
-          eventually {
-            logs.filter(
-              _.getLevel == Level.INFO
-            ).loneElement.getMessage shouldBe s"Received SDES callback for file: $fileName, with correlationId : $uuid and status : $FileProcessingFailure"
-            status(result) shouldBe OK
-          }
-          verify(mockObjectStoreClient).deleteObject(any(), any())(any())
-          verifyNoInteractions(mockFraudReportRepository)
-        }
-      }
-
       "delete file from object store and update unprocessed in mongo when call back status is FileProcessed" in {
         withCaptureOfLoggingFrom[SDESCallbackController] { logs =>
           val notification = createCallBackNotification(FileProcessed, fileName)
-          val result       = performActionWithJsonBody(Json.toJson(notification))
+          val result       = performActionWithJsonBody(notification)
           eventually {
             logs.filter(
               _.getLevel == Level.INFO
             ).loneElement.getMessage shouldBe s"Received SDES callback for file: $fileName, with correlationId : $uuid and status : $FileProcessed"
             status(result) shouldBe OK
           }
-          verify(mockObjectStoreClient).deleteObject(any(), any())(any())
+          verify(mockObjectStoreClient).deleteObject(equalTo(filePath), any())(any())
           verify(mockFraudReportRepository).updateUnprocessed(equalTo(UUID.fromString(notification.correlationID)))
         }
       }
     }
 
-    "return 400 when json isn't what is expected" in {
-      withCaptureOfLoggingFrom[SDESCallbackController] { logs =>
-        val result = performActionWithJsonBody(JsString("invalid-json"))
-        eventually {
-          logs.filter(_.getLevel == Level.WARN).loneElement.getMessage should startWith(
-            s"Failed to parse the SDES callback notification with error"
-          )
-          status(result) shouldBe BAD_REQUEST
-        }
-        verifyNoInteractions(mockObjectStoreClient, mockFraudReportRepository)
-      }
+    "return 400  Bad Request when given an invalid Callback notification " in {
+      val request = FakeRequest("Post", sdesCallbackURL).withBody(Json.obj()).withHeaders(CONTENT_TYPE -> JSON)
+      val result  = controller.callback(request)
+
+      status(result) shouldBe BAD_REQUEST
+      verifyNoInteractions(mockObjectStoreClient, mockFraudReportRepository)
     }
 
   }

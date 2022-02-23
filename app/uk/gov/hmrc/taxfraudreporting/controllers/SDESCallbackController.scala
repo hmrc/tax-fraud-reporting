@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.taxfraudreporting.controllers
 
-import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
 import play.api.{Configuration, Logging}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.Path
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -41,28 +41,18 @@ class SDESCallbackController @Inject() (
 
   private val path = Path Directory configuration.get[String]("services.objectStorageWorker.path")
 
-  def callback: Action[JsValue] = Action(parse.json).async { implicit request =>
-    Json.fromJson[CallBackNotification](request.body) match {
-      case JsSuccess(callbackNotification, _) =>
-        logger.info(
-          s"Received SDES callback for file: ${callbackNotification.filename}, " +
-            s"with correlationId : ${callbackNotification.correlationID} and status : ${callbackNotification.notification}"
-        )
-        import callbackNotification._
-        notification match {
-          case FileReady | FileReceived => Future.successful(Ok)
-          case FileProcessingFailure =>
-            objectStoreClient.deleteObject(path file filename).map(_ => Ok)
-          case FileProcessed =>
-            for {
-              _ <- objectStoreClient.deleteObject(path file filename)
-              _ <- fraudReportRepository.updateUnprocessed(UUID.fromString(correlationID))
-            } yield Ok
-        }
+  implicit private val headerCarrier: HeaderCarrier = HeaderCarrier()
 
-      case JsError(err) =>
-        logger.warn(s"Failed to parse the SDES callback notification with error:: $err")
-        Future.successful(BadRequest)
+  def callback: Action[CallBackNotification] = Action.async(parse.json[CallBackNotification]) { request =>
+    val CallBackNotification(status, filename, correlationID, _) = request.body
+    logger.info(s"Received SDES callback for file: $filename, with correlationId : $correlationID and status : $status")
+    status match {
+      case FileReady | FileReceived | FileProcessingFailure => Future.successful(Ok)
+      case FileProcessed =>
+        for {
+          _ <- objectStoreClient.deleteObject(path file filename)
+          _ <- fraudReportRepository.updateUnprocessed(UUID.fromString(correlationID))
+        } yield Ok
     }
 
   }
