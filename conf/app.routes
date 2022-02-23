@@ -1,3 +1,5 @@
 # microservice specific routes
 
 POST       /fraud-report           uk.gov.hmrc.taxfraudreporting.controllers.FraudReportController.createFraudReport
+
+POST       /sdes/callback           uk.gov.hmrc.taxfraudreporting.controllers.SDESCallbackController.callback
