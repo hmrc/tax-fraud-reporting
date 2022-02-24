@@ -19,24 +19,22 @@ package uk.gov.hmrc.taxfraudreporting.models.xml
 import play.api.libs.json.{Json, OFormat}
 
 final case class Address(
-  address_Line_1: Option[String] = None,
-  address_Line_2: Option[String] = None,
-  address_Line_3: Option[String] = None,
-  town_City: Option[String] = None,
+  addressLine1: Option[String] = None,
+  addressLine2: Option[String] = None,
+  addressLine3: Option[String] = None,
+  townCity: Option[String] = None,
   postcode: Option[String] = None,
-  country: Option[String] = None,
-  general_Location: Option[String] = None
+  country: Option[String] = None
 ) extends FraudReportXml {
 
   def toXml: xml.Elem =
     <address>
-      {optionToXml(address_Line_1, "address_Line_1")}
-      {optionToXml(address_Line_2, "address_Line_2")}
-      {optionToXml(address_Line_3, "address_Line_3")}
-      {optionToXml(town_City, "town_City")}
+      {optionToXml(addressLine1, "address_Line_1")}
+      {optionToXml(addressLine2, "address_Line_2")}
+      {optionToXml(addressLine3, "address_Line_3")}
+      {optionToXml(townCity, "town_City")}
       {optionToXml(postcode, "postcode")}
       {optionToXml(country, "country")}
-      {optionToXml(general_Location, "general_Location")}
     </address>
 
 }
