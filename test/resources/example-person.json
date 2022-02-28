@@ -67,5 +67,6 @@
     "emailAddress": "modestas.ruksnaitis@digital.hmrc.gov.uk",
     "memorableWord": ""
   },
-  "hasEvidence": true
+  "hasEvidence": true,
+  "evidenceDetails": "evidence details"
 }

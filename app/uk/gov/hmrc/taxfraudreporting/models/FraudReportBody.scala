@@ -23,6 +23,7 @@ final case class FraudReportBody(
   activityType: String,
   nominals: List[Nominal],
   informationSource: String,
+  evidenceDetails: Option[String],
   valueFraud: Option[Long] = None,
   durationFraud: Option[String] = None,
   howManyKnow: Option[String] = None,

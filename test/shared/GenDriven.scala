@@ -147,10 +147,12 @@ trait GenDriven {
     additionalDetails <- stringOptions
     reporter          <- Gen option reporters
     hasEvidence       <- arbitrary[Boolean]
+    evidenceDetails   <- Gen.option(Gen.alphaNumStr).map(_.filter(_ => hasEvidence))
   } yield FraudReportBody(
     activityType,
     listOfNominals,
     informationSource,
+    evidenceDetails,
     valueFraud,
     durationFraud,
     howManyKnow,

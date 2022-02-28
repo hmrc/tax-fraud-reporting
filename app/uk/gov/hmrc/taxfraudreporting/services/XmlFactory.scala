@@ -71,9 +71,12 @@ class XmlFactory @Inject() (val configuration: Configuration) extends Configured
       <value_Fraud_Band>{valueFraudBand}</value_Fraud_Band>
       <duration_Fraud>{fraudReportBody.durationFraud.orNull}</duration_Fraud>
       <how_Many_Know>{fraudReportBody.howManyKnow.orNull}</how_Many_Know>
-      <additional_Details>{fraudReportBody.additionalDetails}</additional_Details>{
-      fraudReportBody.reporter map { _.toXml } orNull
-    }<supporting_Evidence>{fraudReportBody.hasEvidence}</supporting_Evidence>
+      <additional_Details>{fraudReportBody.additionalDetails}</additional_Details>
+      { fraudReportBody.reporter map { _.toXml } orNull }
+      <supporting_Evidence>{fraudReportBody.hasEvidence}</supporting_Evidence>
+      { fraudReportBody.evidenceDetails.map { value =>
+        <evidenceDetails>{value}</evidenceDetails>
+      }.orNull }
     </report> toString
   }
 

@@ -73,7 +73,7 @@
 			<xs:element name="additional_Details">
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
-						<xs:maxLength value="1500"/>
+						<xs:maxLength value="1200"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
@@ -89,6 +89,7 @@
 				</xs:complexType>
 			</xs:element>
 			<xs:element name="supporting_Evidence" type="xs:boolean"/>
+			<xs:element name="evidenceDetails" type="String500" minOccurs="0"/>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -196,6 +197,12 @@
 	<xs:simpleType name="String255">
 		<xs:restriction base="xs:string">
 			<xs:maxLength value="255"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<xs:simpleType name="String500">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="500"/>
 		</xs:restriction>
 	</xs:simpleType>
 
