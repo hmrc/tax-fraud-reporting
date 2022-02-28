@@ -1,45 +1,45 @@
 <reports>
 	<fileHeader>
-		<sending_System>RIS Fraud Reporting</sending_System>
-		<receiving_System>EVI BDApp</receiving_System>
-		<extract_Date_Time>20/12/2021 15:45:22</extract_Date_Time>
+		<sendingSystem>RIS Fraud Reporting</sendingSystem>
+		<receivingSystem>EVI BDApp</receivingSystem>
+		<extractDateTime>20/12/2021 15:45:22</extractDateTime>
 		<filename>DIGITAL_EVIBDAPP_202112201600_FRAUD_REPORTS.xml</filename>
-		<num_Reports>1</num_Reports>
-		<file_Version>0.1</file_Version>
+		<numReports>1</numReports>
+		<fileVersion>0.1</fileVersion>
 	</fileHeader>
 	<report>
-		<report_Number>1</report_Number>
-		<digital_ID>XXX</digital_ID>
+		<reportNumber>1</reportNumber>
+		<digitalID>XXX</digitalID>
 		<submitted>07/12/2021 10:33:22</submitted>
-		<activity_Type>Fraud related to VAT</activity_Type>
+		<activityType>Fraud related to VAT</activityType>
+		<informationSource>Information source</informationSource>
 		<nominals>
 			<nominal>
 				<person>
 					<name>
 						<forename/>
 						<surname/>
-						<middle_Name/>
+						<middleName/>
 						<alias/>
 					</name>
 					<address>
-						<address_Line_1/>
-						<address_Line_2/>
-						<address_Line_3/>
-						<town_City/>
+						<addressLine1/>
+						<addressLine2/>
+						<addressLine3/>
+						<townCity/>
 						<postcode>EH12 9JE</postcode>
 						<country/>
-						<general_Location/>
 					</address>
 					<contact>
-						<landline_Number/>
-						<mobile_Number/>
-						<email_Address/>
+						<landlineNumber/>
+						<mobileNumber/>
+						<emailAddress/>
 					</contact>
 					<personAge>
 						<dob>20/03/1988</dob>
 						<age>101</age>
 					</personAge>
-					<connection_Type>Partner</connection_Type>
+					<connectionType>Partner</connectionType>
 					<NINO>XX123456X</NINO>
 				</person>
 				<business>
@@ -47,38 +47,38 @@
 					<businessType/>
 					<employeeCount>100</employeeCount>
 					<address>
-						<address_Line_1/>
-						<address_Line_2/>
-						<address_Line_3/>
-						<town_City/>
+						<addressLine1/>
+						<addressLine2/>
+						<addressLine3/>
+						<townCity/>
 						<postcode>EH12 9JE</postcode>
 						<country/>
-						<general_Location/>
 					</address>
 					<contact>
-						<landline_Number/>
-						<mobile_Number/>
-						<email_Address/>
+						<landlineNumber/>
+						<mobileNumber/>
+						<emailAddress/>
 					</contact>
-					<connection_Type>My Employer</connection_Type>
-					<VAT_Number/>
-					<ct_Utr/>
-					<employee_Number/>
+					<connectionType>My Employer</connectionType>
+					<VATNumber/>
+					<ctUtr/>
+					<employeeNumber/>
 				</business>
 			</nominal>
 		</nominals>
-		<value_Fraud>4000000</value_Fraud>
-		<value_Fraud_Band>5</value_Fraud_Band>
-		<duration_Fraud>Over 5 years ago</duration_Fraud>
-		<how_Many_Know>i don't know</how_Many_Know>
-		<additional_Details>You have 250 words</additional_Details>
+		<valueFraud>4000000</valueFraud>
+		<valueFraudBand>5</valueFraudBand>
+		<durationFraud>Over 5 years ago</durationFraud>
+		<howManyKnow>i don't know</howManyKnow>
+		<additionalDetails>You have 250 words</additionalDetails>
 		<reporter>
 			<forename/>
 			<surname/>
-			<telephone_Number/>
-			<email_Address/>
-			<memorable_Word/>
+			<telephoneNumber/>
+			<emailAddress/>
+			<memorableWord/>
 		</reporter>
-		<supporting_Evidence>true</supporting_Evidence>
+		<supportingEvidence>true</supportingEvidence>
+		<evidenceDetails>evidence details</evidenceDetails>
 	</report>
 </reports>

@@ -22,6 +22,8 @@ import uk.gov.hmrc.taxfraudreporting.models.xml.{Nominal, Reporter}
 final case class FraudReportBody(
   activityType: String,
   nominals: List[Nominal],
+  informationSource: String,
+  evidenceDetails: Option[String],
   valueFraud: Option[Long] = None,
   durationFraud: Option[String] = None,
   howManyKnow: Option[String] = None,

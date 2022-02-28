@@ -1,5 +1,6 @@
 {
   "activityType": "CJRS",
+  "informationSource": "information source",
   "nominals": [{
     "business": {
       "businessName": "",
@@ -37,5 +38,6 @@
     "emailAddress": "modestas.ruksnaitis@digital.hmrc.gov.uk",
     "memorableWord": ""
   },
-  "hasEvidence": true
+  "hasEvidence": true,
+  "evidenceDetails": "evidence details"
 }

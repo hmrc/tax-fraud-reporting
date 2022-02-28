@@ -30,9 +30,9 @@ final case class Reporter(
     <reporter>
       {optionToXml(forename, "forename")}
       {optionToXml(surname, "surname")}
-      {optionToXml(telephoneNumber, "telephone_Number")}
-      {optionToXml(emailAddress, "email_Address")}
-      {optionToXml(memorableWord, "memorable_Word")}
+      {optionToXml(telephoneNumber, "telephoneNumber")}
+      {optionToXml(emailAddress, "emailAddress")}
+      {optionToXml(memorableWord, "memorableWord")}
     </reporter>
 
 }

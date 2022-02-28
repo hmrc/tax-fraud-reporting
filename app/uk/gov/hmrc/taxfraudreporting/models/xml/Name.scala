@@ -21,7 +21,7 @@ import play.api.libs.json.{Json, OFormat}
 final case class Name(
   forename: Option[String] = None,
   surname: Option[String] = None,
-  middle_Name: Option[String] = None,
+  middleName: Option[String] = None,
   alias: Option[String] = None
 ) extends FraudReportXml {
 
@@ -29,7 +29,7 @@ final case class Name(
     <name>
       {optionToXml(forename, "forename")}
       {optionToXml(surname, "surname")}
-      {optionToXml(middle_Name, "middle_Name")}
+      {optionToXml(middleName, "middleName")}
       {optionToXml(alias, "alias")}
     </name>
 

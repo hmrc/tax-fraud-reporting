@@ -63,7 +63,7 @@ class FraudReportStreamerSpec extends IntegrationSpecCommonBase with GenDriven {
         val xmlString   = byteString decodeString Charset.defaultCharset()
         val reportNodes = XML.loadString(xmlString) \\ "report"
 
-        val reportIds = reportNodes map { node => (node \ "digital_ID").head.text }
+        val reportIds = reportNodes map { node => (node \ "digitalID").head.text }
 
         listOfFraudReports foreach { fraudReport =>
           val reportIncluded = reportIds contains fraudReport._id.toString
