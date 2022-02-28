@@ -51,7 +51,7 @@ class SDESCallbackController @Inject() (
       case FileProcessed =>
         for {
           _ <- objectStoreClient.deleteObject(path file filename)
-          _ <- fraudReportRepository.updateUnprocessed(UUID.fromString(correlationID))
+          _ <- fraudReportRepository.updateAsProcessed(UUID.fromString(correlationID))
         } yield Ok
     }
 

@@ -38,4 +38,6 @@ trait FraudReportRepository {
   def countUnprocessed: SingleObservable[Long]
 
   def updateUnprocessed(correlationId: UUID): Future[UpdateResult]
+
+  def updateAsProcessed(correlationId: UUID): Future[UpdateResult]
 }
