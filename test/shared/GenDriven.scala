@@ -139,6 +139,7 @@ trait GenDriven {
 
   private val fraudReportBodies = for {
     activityType      <- Gen.alphaNumStr
+    informationSource <- Gen.alphaNumStr
     listOfNominals    <- listsOfNominals
     valueFraud        <- Gen option Gen.choose(1L, 2000000L)
     durationFraud     <- stringOptions
@@ -149,6 +150,7 @@ trait GenDriven {
   } yield FraudReportBody(
     activityType,
     listOfNominals,
+    informationSource,
     valueFraud,
     durationFraud,
     howManyKnow,

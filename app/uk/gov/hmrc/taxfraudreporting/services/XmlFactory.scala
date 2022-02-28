@@ -65,6 +65,7 @@ class XmlFactory @Inject() (val configuration: Configuration) extends Configured
       <digital_ID>{id}</digital_ID>
       <submitted>{timestamp(submitted)}</submitted>
       <activity_Type>{fraudReportBody.activityType}</activity_Type>
+      <informationSource>{fraudReportBody.informationSource}</informationSource>
       <nominals>{fraudReportBody.nominals map { _.toXml }}</nominals>
       <value_Fraud>{valueFraud}</value_Fraud>
       <value_Fraud_Band>{valueFraudBand}</value_Fraud_Band>

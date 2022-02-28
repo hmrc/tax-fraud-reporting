@@ -39,7 +39,7 @@ class FraudReportControllerSpec extends AnyWordSpec with Matchers with MockitoSu
     implicit val as: ActorSystem              = ActorSystem()
 
     val repo = mock[FraudReportRepository]
-    val body = FraudReportBody("", Nil)
+    val body = FraudReportBody("", Nil, "informationSource")
     when(repo.insert(any())) thenReturn Future.successful(FraudReport(body))
 
     val controller = new FraudReportController(stubControllerComponents(), repo)

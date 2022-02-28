@@ -45,6 +45,7 @@
 			<xs:element name="digital_ID" type="String50"/>
 			<xs:element name="submitted" type="DateTime"/>
 			<xs:element name="activity_Type" type="String255"/>
+			<xs:element name="informationSource" type="String255"/>
 			<xs:element name="nominals">
 				<xs:complexType>
 					<xs:sequence>
