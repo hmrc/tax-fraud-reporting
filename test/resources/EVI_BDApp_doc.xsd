@@ -175,7 +175,6 @@
 			<xs:element name="townCity" type="String255" minOccurs="0"/>
 			<xs:element name="postcode" type="String255" minOccurs="0"/>
 			<xs:element name="country" type="String255" minOccurs="0"/>
-			<xs:element name="generalLocation" type="String255" minOccurs="0"/>
 		</xs:sequence>
 	</xs:complexType>
 
