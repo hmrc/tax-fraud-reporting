@@ -36,7 +36,7 @@ final case class Person(
       {optionToXml(dob, "dob")}
       {optionToXml(age, "age")}
       {optionToXml(NINO, "NINO")}
-      <connection_Type>{connectionType}</connection_Type>
+      <connectionType>{connectionType}</connectionType>
     </person>
 
 }

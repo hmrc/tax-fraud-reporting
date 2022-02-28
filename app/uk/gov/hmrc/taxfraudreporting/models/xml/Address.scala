@@ -29,10 +29,10 @@ final case class Address(
 
   def toXml: xml.Elem =
     <address>
-      {optionToXml(addressLine1, "address_Line_1")}
-      {optionToXml(addressLine2, "address_Line_2")}
-      {optionToXml(addressLine3, "address_Line_3")}
-      {optionToXml(townCity, "town_City")}
+      {optionToXml(addressLine1, "addressLine1")}
+      {optionToXml(addressLine2, "addressLine2")}
+      {optionToXml(addressLine3, "addressLine3")}
+      {optionToXml(townCity, "townCity")}
       {optionToXml(postcode, "postcode")}
       {optionToXml(country, "country")}
     </address>

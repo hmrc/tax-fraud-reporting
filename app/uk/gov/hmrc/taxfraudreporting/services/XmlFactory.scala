@@ -41,13 +41,13 @@ class XmlFactory @Inject() (val configuration: Configuration) extends Configured
     logger.info(s"Building header $correlationID")
 
     <header>
-      <correlation_Id>{correlationID}</correlation_Id>
-      <sending_System>{configured("sendingSystem")}</sending_System>
-      <receiving_System>{configured("receivingSystem")}</receiving_System>
-      <extract_Date_Time>{timestamp(dateTime)}</extract_Date_Time>
+      <correlationId>{correlationID}</correlationId>
+      <sendingSystem>{configured("sendingSystem")}</sendingSystem>
+      <receivingSystem>{configured("receivingSystem")}</receivingSystem>
+      <extractDateTime>{timestamp(dateTime)}</extractDateTime>
       <filename>{getFileName(dateTime)}</filename>
-      <num_Reports>{numOfReports}</num_Reports>
-      <file_Version>{configured("version")}</file_Version>
+      <numReports>{numOfReports}</numReports>
+      <fileVersion>{configured("version")}</fileVersion>
     </header> toString
   }
 
@@ -61,19 +61,19 @@ class XmlFactory @Inject() (val configuration: Configuration) extends Configured
     val valueFraudBand = valueFraudBands.count(_ <= valueFraud) + 1
 
     <report>
-      <report_Number>{index + 1}</report_Number>
-      <digital_ID>{id}</digital_ID>
+      <reportNumber>{index + 1}</reportNumber>
+      <digitalID>{id}</digitalID>
       <submitted>{timestamp(submitted)}</submitted>
-      <activity_Type>{fraudReportBody.activityType}</activity_Type>
+      <activityType>{fraudReportBody.activityType}</activityType>
       <informationSource>{fraudReportBody.informationSource}</informationSource>
       <nominals>{fraudReportBody.nominals map { _.toXml }}</nominals>
-      <value_Fraud>{valueFraud}</value_Fraud>
-      <value_Fraud_Band>{valueFraudBand}</value_Fraud_Band>
-      <duration_Fraud>{fraudReportBody.durationFraud.orNull}</duration_Fraud>
-      <how_Many_Know>{fraudReportBody.howManyKnow.orNull}</how_Many_Know>
-      <additional_Details>{fraudReportBody.additionalDetails}</additional_Details>
+      <valueFraud>{valueFraud}</valueFraud>
+      <valueFraudBand>{valueFraudBand}</valueFraudBand>
+      <durationFraud>{fraudReportBody.durationFraud.orNull}</durationFraud>
+      <howManyKnow>{fraudReportBody.howManyKnow.orNull}</howManyKnow>
+      <additionalDetails>{fraudReportBody.additionalDetails}</additionalDetails>
       { fraudReportBody.reporter map { _.toXml } orNull }
-      <supporting_Evidence>{fraudReportBody.hasEvidence}</supporting_Evidence>
+      <supportingEvidence>{fraudReportBody.hasEvidence}</supportingEvidence>
       { fraudReportBody.evidenceDetails.map { value =>
         <evidenceDetails>{value}</evidenceDetails>
       }.orNull }

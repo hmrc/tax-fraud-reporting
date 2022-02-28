@@ -29,7 +29,7 @@ final case class Name(
     <name>
       {optionToXml(forename, "forename")}
       {optionToXml(surname, "surname")}
-      {optionToXml(middle_Name, "middle_Name")}
+      {optionToXml(middle_Name, "middleName")}
       {optionToXml(alias, "alias")}
     </name>
 

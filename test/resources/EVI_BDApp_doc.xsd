@@ -11,16 +11,16 @@
 
 	<xs:complexType name="Header">
 		<xs:sequence>
-			<xs:element name="correlation_Id">
+			<xs:element name="correlationId">
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
 						<xs:pattern value="[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
-			<xs:element name="sending_System" type="xs:string" fixed="RIS Fraud Reporting"/>
-			<xs:element name="receiving_System" type="xs:string" fixed="EVI BDApp"/>
-			<xs:element name="extract_Date_Time" type="xs:string"/>
+			<xs:element name="sendingSystem" type="xs:string" fixed="RIS Fraud Reporting"/>
+			<xs:element name="receivingSystem" type="xs:string" fixed="EVI BDApp"/>
+			<xs:element name="extractDateTime" type="xs:string"/>
 			<xs:element name="filename">
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
@@ -28,8 +28,8 @@
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
-			<xs:element name="num_Reports" type="ReportNumber"/>
-			<xs:element name="file_Version">
+			<xs:element name="numReports" type="ReportNumber"/>
+			<xs:element name="fileVersion">
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
 						<xs:pattern value="\d\d?\.\d\d?"/>
@@ -41,10 +41,10 @@
 
 	<xs:complexType name="FraudReport">
 		<xs:sequence>
-			<xs:element name="report_Number" type="ReportNumber"/>
-			<xs:element name="digital_ID" type="String50"/>
+			<xs:element name="reportNumber" type="ReportNumber"/>
+			<xs:element name="digitalID" type="String50"/>
 			<xs:element name="submitted" type="DateTime"/>
-			<xs:element name="activity_Type" type="String255"/>
+			<xs:element name="activityType" type="String255"/>
 			<xs:element name="informationSource" type="String255"/>
 			<xs:element name="nominals">
 				<xs:complexType>
@@ -60,17 +60,17 @@
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
-			<xs:element name="value_Fraud">
+			<xs:element name="valueFraud">
 				<xs:simpleType>
 					<xs:restriction base="xs:unsignedLong">
 						<xs:maxInclusive value="999999999999"/>
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
-			<xs:element name="value_Fraud_Band" type="String50"/>
-			<xs:element name="duration_Fraud" type="String255"/>
-			<xs:element name="how_Many_Know" type="String255"/>
-			<xs:element name="additional_Details">
+			<xs:element name="valueFraudBand" type="String50"/>
+			<xs:element name="durationFraud" type="String255"/>
+			<xs:element name="howManyKnow" type="String255"/>
+			<xs:element name="additionalDetails">
 				<xs:simpleType>
 					<xs:restriction base="xs:string">
 						<xs:maxLength value="1200"/>
@@ -82,13 +82,13 @@
 					<xs:sequence>
 						<xs:element name="forename" minOccurs="0" type="String255"/>
 						<xs:element name="surname" minOccurs="0" type="String255"/>
-						<xs:element name="telephone_Number" minOccurs="0" type="String50"/>
-						<xs:element name="email_Address" minOccurs="0" type="Email"/>
-						<xs:element name="memorable_Word" minOccurs="0" type="String255"/>
+						<xs:element name="telephoneNumber" minOccurs="0" type="String50"/>
+						<xs:element name="emailAddress" minOccurs="0" type="Email"/>
+						<xs:element name="memorableWord" minOccurs="0" type="String255"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
-			<xs:element name="supporting_Evidence" type="xs:boolean"/>
+			<xs:element name="supportingEvidence" type="xs:boolean"/>
 			<xs:element name="evidenceDetails" type="String500" minOccurs="0"/>
 		</xs:sequence>
 	</xs:complexType>
@@ -101,7 +101,7 @@
 					<xs:sequence>
 						<xs:element name="forename" minOccurs="0" type="String255"/>
 						<xs:element name="surname" minOccurs="0" type="String255"/>
-						<xs:element name="middle_Name" minOccurs="0" type="String255"/>
+						<xs:element name="middleName" minOccurs="0" type="String255"/>
 						<xs:element name="alias" minOccurs="0" type="String255"/>
 					</xs:sequence>
 				</xs:complexType>
@@ -130,7 +130,7 @@
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>
-			<xs:element name="connection_Type" type="xs:string"/>
+			<xs:element name="connectionType" type="xs:string"/>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -169,13 +169,13 @@
 
 	<xs:complexType name="Address">
 		<xs:sequence>
-			<xs:element name="address_Line_1" type="String255" minOccurs="0"/>
-			<xs:element name="address_Line_2" type="String255" minOccurs="0"/>
-			<xs:element name="address_Line_3" type="String255" minOccurs="0"/>
-			<xs:element name="town_City" type="String255" minOccurs="0"/>
+			<xs:element name="addressLine1" type="String255" minOccurs="0"/>
+			<xs:element name="addressLine2" type="String255" minOccurs="0"/>
+			<xs:element name="addressLine3" type="String255" minOccurs="0"/>
+			<xs:element name="townCity" type="String255" minOccurs="0"/>
 			<xs:element name="postcode" type="String255" minOccurs="0"/>
 			<xs:element name="country" type="String255" minOccurs="0"/>
-			<xs:element name="general_Location" type="String255" minOccurs="0"/>
+			<xs:element name="generalLocation" type="String255" minOccurs="0"/>
 		</xs:sequence>
 	</xs:complexType>
 
