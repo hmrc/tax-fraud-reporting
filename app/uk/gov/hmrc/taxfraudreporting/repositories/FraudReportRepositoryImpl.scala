@@ -18,7 +18,6 @@ package uk.gov.hmrc.taxfraudreporting.repositories
 
 import com.google.inject.{Inject, Singleton}
 import org.mongodb.scala.model.Filters.equal
-import org.mongodb.scala.model.IndexModel
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.{IndexModel, Updates}
 import org.mongodb.scala.result.UpdateResult
@@ -61,5 +60,8 @@ class FraudReportRepositoryImpl @Inject() (mongoComponent: MongoComponent)(impli
 
   def updateUnprocessed(correlationId: UUID): Future[UpdateResult] =
     collection.updateMany(unprocessed, Updates.set("correlationId", correlationId.toString)).toFuture()
+
+  def updateAsProcessed(correlationId: UUID): Future[UpdateResult] =
+    collection.updateMany(equal("correlationId", correlationId.toString), Updates.set("isProcessed", true)).toFuture()
 
 }

@@ -64,7 +64,7 @@ class SDESCallbackControllerSpec
     Future.successful(())
 
   when {
-    mockFraudReportRepository.updateUnprocessed(any())
+    mockFraudReportRepository.updateAsProcessed(any())
   } thenReturn
     Future.successful(mock[UpdateResult])
 
@@ -118,7 +118,7 @@ class SDESCallbackControllerSpec
         }
       }
 
-      "delete file from object store and update unprocessed in mongo when call back status is FileProcessed" in {
+      "delete file from object store and update reports with correlationId as processed in mongo when call back status is FileProcessed" in {
         withCaptureOfLoggingFrom[SDESCallbackController] { logs =>
           val notification = createCallBackNotification(FileProcessed, fileName)
           val result       = performActionWithJsonBody(notification)
@@ -129,7 +129,7 @@ class SDESCallbackControllerSpec
             status(result) shouldBe OK
           }
           verify(mockObjectStoreClient).deleteObject(equalTo(filePath), any())(any())
-          verify(mockFraudReportRepository).updateUnprocessed(equalTo(UUID.fromString(notification.correlationID)))
+          verify(mockFraudReportRepository).updateAsProcessed(equalTo(UUID.fromString(notification.correlationID)))
         }
       }
     }

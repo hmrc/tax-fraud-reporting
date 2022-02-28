@@ -109,6 +109,32 @@ class FraudReportRepositorySpec
           updated.head.correlationId.value should be(correlationId)
         }
       }
+
+      s"update $dataName reports with correlation id as processed" in {
+        await(repository.collection.drop().toFuture())
+
+        val app       = builder.build()
+        val inputData = exampleData
+        running(app) {
+
+          val unprocessedDoc = repository.insert(inputData).futureValue
+
+          val correlationId        = UUID.randomUUID()
+          val docSentToObjectstore = repository.insert(inputData).futureValue
+          val updatedResult = repository.collection.updateOne(
+            Filters.equal("_id", docSentToObjectstore._id.toString),
+            Updates.set("correlationId", correlationId.toString)
+          ).toFuture().futureValue
+          updatedResult.getModifiedCount mustBe 1
+
+          val eventualResult = repository.updateAsProcessed(correlationId).futureValue
+          eventualResult.getModifiedCount mustBe 1
+
+          val updated = repository.listUnprocessed.toFuture().futureValue
+          updated.size mustBe 1
+          updated.head._id mustBe unprocessedDoc._id
+        }
+      }
     }
   }
 }
