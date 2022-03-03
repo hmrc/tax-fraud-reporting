@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxfraudreporting.services
 
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.http.Status._
+import play.api.libs.json.Json
 import play.api.{Configuration, Logging}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
@@ -44,7 +45,8 @@ class SDESServiceImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfi
   private val clientId: String = config.get[String]("services.sdes.client-id")
   private val extraHeaders: Seq[(String, String)] = Seq("x-client-id" -> clientId)
 
-  override def fileNotify(fileNotifyRequest: SDESFileNotifyRequest)(implicit hc: HeaderCarrier): Future[Unit] =
+  override def fileNotify(fileNotifyRequest: SDESFileNotifyRequest)(implicit hc: HeaderCarrier): Future[Unit] = {
+    logger.debug(s"SDES notification request: ${Json.stringify(Json.toJson(fileNotifyRequest))}")
     http.POST[SDESFileNotifyRequest, HttpResponse](sdesUrl, fileNotifyRequest, extraHeaders).flatMap {
       response =>
         response.status match {
@@ -62,5 +64,6 @@ class SDESServiceImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfi
             Future.failed(e)
         }
     }
+  }
 
 }
