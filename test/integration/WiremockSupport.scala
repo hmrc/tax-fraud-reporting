@@ -62,19 +62,4 @@ trait WiremockSupport extends BeforeAndAfterEach with BeforeAndAfterAll {
   }
 
   override protected def beforeEach(): Unit = resetWiremock()
-
-  def stubPost(url: String, requestJson: String, status: Integer): StubMapping =
-    stubFor(
-      post(urlMatching(url))
-        .withRequestBody(equalToJson(requestJson))
-        .willReturn(aResponse().withStatus(status))
-    )
-
-  def stubPostWithResponse(url: String, requestJson: String, status: Integer, response: String): StubMapping =
-    stubFor(
-      post(urlMatching(url))
-        .withRequestBody(equalToJson(requestJson))
-        .willReturn(aResponse().withStatus(status).withBody(response))
-    )
-
 }
