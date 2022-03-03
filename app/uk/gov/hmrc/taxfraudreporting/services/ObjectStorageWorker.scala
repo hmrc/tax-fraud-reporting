@@ -32,7 +32,7 @@ import uk.gov.hmrc.taxfraudreporting.repositories.FraudReportRepository
 import java.time.{LocalDate, LocalDateTime, LocalTime, ZoneOffset}
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.duration.{DurationInt, DurationLong}
+import scala.concurrent.duration.{Duration, DurationInt, DurationLong}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 import scala.util.control.NonFatal
@@ -91,6 +91,7 @@ class ObjectStorageWorker @Inject() (
 
   private val lockID = "lockID"
   private val owner  = "owner"
+  private val lockDuration: Duration = configuration.get[Duration]("services.objectStorageWorker.lock-duration")
 
   def job: Future[Option[ObjectSummaryWithMd5]] = {
     logger.info("Commencing job.")
@@ -101,7 +102,7 @@ class ObjectStorageWorker @Inject() (
           logger.info("Job already locked; leaving to other worker.")
           Future(None)
         } else
-          lockRepository.takeLock(lockID, owner, 1.minute) flatMap {
+          lockRepository.takeLock(lockID, owner, lockDuration) flatMap {
             gainedLock =>
               if (gainedLock) {
                 logger.info("Lock taken successfully.")
