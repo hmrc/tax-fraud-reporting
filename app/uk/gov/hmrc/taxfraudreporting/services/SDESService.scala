@@ -37,14 +37,15 @@ class SDESServiceImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfi
   ec: ExecutionContext
 ) extends SDESService with Logging {
 
-  val message: String             = "Call to notify SDES came back with status::"
   private val baseUrl: String     = servicesConfig.baseUrl("sdes")
-  private val apiLocation: String = config.get[String]("services.sdes.location")
+  private val apiLocation: Option[String] = Some(config.get[String]("services.sdes.location")).filter(_.nonEmpty)
+  private val sdesUrl: String = List(Some(baseUrl), apiLocation, Some("notification"), Some("fileready")).flatten.mkString("/")
 
-  private val sdesUrl: String = s"$baseUrl/$apiLocation/notification/fileready"
+  private val clientId: String = config.get[String]("services.sdes.client-id")
+  private val extraHeaders: Seq[(String, String)] = Seq("x-client-id" -> clientId)
 
   override def fileNotify(fileNotifyRequest: SDESFileNotifyRequest)(implicit hc: HeaderCarrier): Future[Unit] =
-    http.POST[SDESFileNotifyRequest, HttpResponse](sdesUrl, fileNotifyRequest).flatMap {
+    http.POST[SDESFileNotifyRequest, HttpResponse](sdesUrl, fileNotifyRequest, extraHeaders).flatMap {
       response =>
         response.status match {
           case NO_CONTENT =>

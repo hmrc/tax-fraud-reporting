@@ -16,6 +16,8 @@
 
 package integration
 
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, equalTo, equalToJson, post, stubFor, urlMatching}
+import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.apache.http.HttpStatus
 import org.scalatest.concurrent.ScalaFutures.whenReady
 import org.scalatest.matchers.should.Matchers
@@ -33,7 +35,11 @@ class SDESServiceSpec extends AnyWordSpec with Matchers with WiremockSupport wit
 
   override lazy val app: Application =
     GuiceApplicationBuilder()
-      .configure("microservice.services.sdes.host" -> host, "microservice.services.sdes.port" -> wiremockPort)
+      .configure(
+        "microservice.services.sdes.host" -> host,
+        "microservice.services.sdes.port" -> wiremockPort,
+        "services.sdes.client-id" -> "client-id"
+      )
       .build()
 
   val sdesService = app.injector.instanceOf[SDESService]
@@ -75,4 +81,21 @@ class SDESServiceSpec extends AnyWordSpec with Matchers with WiremockSupport wit
       }
     }
   }
+
+  private def stubPost(url: String, requestJson: String, status: Integer): StubMapping =
+    stubFor(
+      post(urlMatching(url))
+        .withRequestBody(equalToJson(requestJson))
+        .withHeader("x-client-id", equalTo("client-id"))
+        .willReturn(aResponse().withStatus(status))
+    )
+
+  private def stubPostWithResponse(url: String, requestJson: String, status: Integer, response: String): StubMapping =
+    stubFor(
+      post(urlMatching(url))
+        .withRequestBody(equalToJson(requestJson))
+        .withHeader("x-client-id", equalTo("client-id"))
+        .willReturn(aResponse().withStatus(status).withBody(response))
+    )
+
 }
