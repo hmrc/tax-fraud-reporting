@@ -30,7 +30,7 @@ import uk.gov.hmrc.taxfraudreporting.models.sdes.{FileAudit, FileChecksum, FileM
 import uk.gov.hmrc.taxfraudreporting.repositories.FraudReportRepository
 
 import java.time.{LocalDate, LocalDateTime, LocalTime, ZoneOffset}
-import java.util.UUID
+import java.util.{Base64, UUID}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.{Duration, DurationInt, DurationLong}
 import scala.concurrent.{ExecutionContext, Future}
@@ -151,7 +151,7 @@ class ObjectStorageWorker @Inject() (
         recipientOrSender,
         fileName,
         s"$fileLocationUrl${objSummary.location.asUri}",
-        FileChecksum(value = objSummary.contentMd5.value),
+        FileChecksum(value = Base64.getDecoder.decode(objSummary.contentMd5.value).map("%02x".format(_)).mkString),
         objSummary.contentLength,
         List()
       ),
