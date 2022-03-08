@@ -19,23 +19,35 @@ package uk.gov.hmrc.taxfraudreporting.repositories
 import com.google.inject.{Inject, Singleton}
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.model.{IndexModel, Updates}
+import org.mongodb.scala.model.{IndexModel, IndexOptions, Updates}
 import org.mongodb.scala.result.UpdateResult
 import org.mongodb.scala.{FindObservable, SingleObservable}
+import play.api.Configuration
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.taxfraudreporting.models.{FraudReport, FraudReportBody}
 
 import java.util.UUID
+import java.util.concurrent.TimeUnit
+import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class FraudReportRepositoryImpl @Inject() (mongoComponent: MongoComponent)(implicit val ec: ExecutionContext)
+class FraudReportRepositoryImpl @Inject() (mongoComponent: MongoComponent, configuration: Configuration)(implicit val ec: ExecutionContext)
     extends PlayMongoRepository[FraudReport](
       collectionName = "fraudReports",
       mongoComponent = mongoComponent,
       domainFormat = FraudReport.format,
-      indexes = Seq("correlationId", "isProcessed") map { name => IndexModel(ascending(name)) }
+      indexes = Seq(
+        IndexModel(ascending("correlationId")),
+        IndexModel(ascending("isProcessed")),
+        IndexModel(
+          ascending("submitted"),
+          IndexOptions()
+            .name("submittedIdx")
+            .expireAfter(configuration.get[Duration]("fraud-report-ttl").toSeconds, TimeUnit.SECONDS)
+        )
+      )
     ) with FraudReportRepository {
 
   def insert(reportBody: FraudReportBody): Future[FraudReport] = {
