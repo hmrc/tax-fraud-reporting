@@ -20,6 +20,7 @@ import org.mongodb.scala.model.{Filters, Updates}
 import org.scalatest.Inside.inside
 import org.scalatest.OptionValues
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import play.api.Configuration
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.Helpers._
@@ -34,7 +35,7 @@ class FraudReportRepositorySpec
     extends IntegrationSpecCommonBase with DefaultPlayMongoRepositorySupport[FraudReport] with OptionValues {
   private implicit val ec: ExecutionContext = injector.instanceOf[ExecutionContext]
 
-  override def repository = new FraudReportRepositoryImpl(mongoComponent)
+  override def repository = new FraudReportRepositoryImpl(mongoComponent, injector.instanceOf[Configuration])
 
   override def beforeAll(): Unit =
     super.beforeAll()
