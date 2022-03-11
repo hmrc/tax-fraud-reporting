@@ -24,7 +24,7 @@ final case class FraudReportBody(
   nominals: List[Nominal],
   informationSource: String,
   evidenceDetails: Option[String],
-  valueFraud: Option[Long] = None,
+  valueFraud: Option[BigDecimal] = None,
   durationFraud: Option[String] = None,
   howManyKnow: Option[String] = None,
   additionalDetails: Option[String] = None,

@@ -137,11 +137,13 @@ trait GenDriven {
 
   private val listsOfNominals = nonEmptyListsOf(nominals, 5)
 
+  private val decimals = arbitrary[BigDecimal].suchThat(d => d > 0 && d <= Math.pow(10, 10)).map(_.setScale(2))
+
   private val fraudReportBodies = for {
     activityType      <- Gen.alphaNumStr
     informationSource <- Gen.alphaNumStr
     listOfNominals    <- listsOfNominals
-    valueFraud        <- Gen option Gen.choose(1L, 2000000L)
+    valueFraud        <- Gen option decimals
     durationFraud     <- stringOptions
     howManyKnow       <- stringOptions
     additionalDetails <- stringOptions
