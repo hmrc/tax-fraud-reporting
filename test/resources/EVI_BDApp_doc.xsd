@@ -62,8 +62,9 @@
 			</xs:element>
 			<xs:element name="valueFraud">
 				<xs:simpleType>
-					<xs:restriction base="xs:unsignedLong">
+					<xs:restriction base="xs:decimal">
 						<xs:maxInclusive value="999999999999"/>
+						<xs:fractionDigits value="2" />
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:element>

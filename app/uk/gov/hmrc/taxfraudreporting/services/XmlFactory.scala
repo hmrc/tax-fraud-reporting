@@ -52,7 +52,7 @@ class XmlFactory @Inject() (val configuration: Configuration) extends Configured
   }
 
   private val valueFraudBands = List(25000, 100000, 500000, 1000000)
-  private val zero = BigDecimal(0)
+  private val zero            = BigDecimal(0)
 
   def getReport(report: FraudReport, index: Long): String = {
     logger.info(s"Preparing fraud report #${index + 1}.")
