@@ -22,10 +22,17 @@ import uk.gov.hmrc.taxfraudreporting.models.xml._
 import uk.gov.hmrc.taxfraudreporting.models.{FraudReport, FraudReportBody}
 
 import java.time.LocalDateTime
+import scala.math.BigDecimal.RoundingMode
 
 trait GenDriven {
 
-  private val stringOptions = Gen option Gen.alphaNumStr
+  private def strWithMaxLength(maxLength: Int, charGen: Gen[Char] = Gen.alphaNumChar) = for {
+    n              <- Gen.chooseNum(1, maxLength)
+    alphaNumString <- charsN(n, charGen)
+  } yield alphaNumString
+
+  private val asciiPrintableStrWithMax255Chars = strWithMaxLength(255, Gen.asciiPrintableChar)
+  private val stringOptions                    = Gen option strWithMaxLength(255)
 
   private val phoneNumOptions = Gen option {
     Gen.listOfN(11, Gen.numChar) map { chars =>
@@ -50,7 +57,7 @@ trait GenDriven {
     lastName      <- stringOptions
     phone         <- phoneNumOptions
     email         <- Gen option emails
-    memorableWord <- stringOptions
+    memorableWord <- Gen option strWithMaxLength(255)
   } yield Reporter(firstName, lastName, phone, email, memorableWord)
 
   private def charsN(n: Int, gen: Gen[Char]) = Gen.containerOfN[Array, Char](n, gen) map String.valueOf
@@ -111,7 +118,7 @@ trait GenDriven {
     dob            <- Gen option dateStrings
     age            <- Gen option Gen.chooseNum(18, 122)
     nino           <- Gen option niNumbers
-    connectionType <- Gen.asciiPrintableStr
+    connectionType <- asciiPrintableStrWithMax255Chars
   } yield Person(name, address, contact, dob, age, nino, connectionType = connectionType)
 
   private val businesses = for {
@@ -122,7 +129,7 @@ trait GenDriven {
     vatNo          <- Gen option vatNumbers
     ctUTR          <- Gen option charsN(10, Gen.numChar)
     payeNo         <- Gen option subjectPayeRefs
-    connectionType <- Gen.asciiPrintableStr
+    connectionType <- asciiPrintableStrWithMax255Chars
   } yield Business(name, businessType, address, contact, vatNo, ctUTR, payeNo, connectionType)
 
   private val nominals = for {
@@ -137,17 +144,23 @@ trait GenDriven {
 
   private val listsOfNominals = nonEmptyListsOf(nominals, 5)
 
+  val maxFraudValue = Math.pow(10, 12) - 2
+
+  private val decimals =
+    Gen.chooseNum(0.01, maxFraudValue)
+      .map(BigDecimal(_).setScale(2, RoundingMode.DOWN))
+
   private val fraudReportBodies = for {
-    activityType      <- Gen.alphaNumStr
-    informationSource <- Gen.alphaNumStr
+    activityType      <- strWithMaxLength(255)
+    informationSource <- strWithMaxLength(255)
     listOfNominals    <- listsOfNominals
-    valueFraud        <- Gen option Gen.choose(1L, 2000000L)
+    valueFraud        <- Gen option decimals
     durationFraud     <- stringOptions
     howManyKnow       <- stringOptions
     additionalDetails <- stringOptions
     reporter          <- Gen option reporters
     hasEvidence       <- arbitrary[Boolean]
-    evidenceDetails   <- Gen.option(Gen.alphaNumStr).map(_.filter(_ => hasEvidence))
+    evidenceDetails   <- Gen.option(strWithMaxLength(500)).map(_.filter(_ => hasEvidence))
   } yield FraudReportBody(
     activityType,
     listOfNominals,
