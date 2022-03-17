@@ -115,7 +115,7 @@ class ObjectStorageWorker @Inject() (
                   _       <- lockRepository.releaseLock(lockID, owner)
                 } yield Some(summary)
               } else {
-                logger.info("Error occurred trying to take lock.")
+                logger.error("Error occurred trying to take lock.")
                 Future(None)
               }
           }
