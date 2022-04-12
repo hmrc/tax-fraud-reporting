@@ -21,6 +21,7 @@ import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import uk.gov.hmrc.taxfraudreporting.repositories.FraudReportRepository
 
+import java.nio.charset.StandardCharsets
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
@@ -46,8 +47,8 @@ class FraudReportStreamer @Inject() (fraudReportRepository: FraudReportRepositor
     opening concat
       header concat
       reports concat
-      closing map
-      ByteString.apply
+      closing map (xml => ByteString.apply(xml, StandardCharsets.ISO_8859_1))
+
   }
 
 }

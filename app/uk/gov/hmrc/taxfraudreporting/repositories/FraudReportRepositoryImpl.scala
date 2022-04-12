@@ -33,8 +33,9 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class FraudReportRepositoryImpl @Inject() (mongoComponent: MongoComponent, configuration: Configuration)(implicit val ec: ExecutionContext)
-    extends PlayMongoRepository[FraudReport](
+class FraudReportRepositoryImpl @Inject() (mongoComponent: MongoComponent, configuration: Configuration)(implicit
+  val ec: ExecutionContext
+) extends PlayMongoRepository[FraudReport](
       collectionName = "fraudReports",
       mongoComponent = mongoComponent,
       domainFormat = FraudReport.format,
