@@ -89,8 +89,8 @@ class ObjectStorageWorker @Inject() (
     objectStoreClient.putObject(path file fileName, fraudReports)
   }
 
-  private val lockID = "lockID"
-  private val owner  = "owner"
+  private val lockID                 = "lockID"
+  private val owner                  = "owner"
   private val lockDuration: Duration = configuration.get[Duration]("services.objectStorageWorker.lock-duration")
 
   def job: Future[Option[ObjectSummaryWithMd5]] = {

@@ -38,7 +38,7 @@ class SDESServiceSpec extends AnyWordSpec with Matchers with WiremockSupport wit
       .configure(
         "microservice.services.sdes.host" -> host,
         "microservice.services.sdes.port" -> wiremockPort,
-        "services.sdes.client-id" -> "client-id"
+        "services.sdes.client-id"         -> "client-id"
       )
       .build()
 
