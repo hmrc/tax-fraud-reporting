@@ -47,7 +47,8 @@ class FraudReportStreamer @Inject() (fraudReportRepository: FraudReportRepositor
     opening concat
       header concat
       reports concat
-      closing map (xml => ByteString.apply(xml, StandardCharsets.ISO_8859_1))
+      closing map
+      ByteString.apply
 
   }
 

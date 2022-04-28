@@ -22,7 +22,7 @@ import akka.stream.{ActorAttributes, Supervision}
 import org.mongodb.scala.result.UpdateResult
 import play.api.{Configuration, Logging}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mongo.lock.MongoLockRepository
+import uk.gov.hmrc.mongo.lock.{LockService, MongoLockRepository}
 import uk.gov.hmrc.objectstore.client.play.Implicits.{akkaSourceContentWrite, futureMonad}
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{ObjectSummaryWithMd5, Path}
@@ -94,31 +94,17 @@ class ObjectStorageWorker @Inject() (
   private val lockDuration: Duration = configuration.get[Duration]("services.objectStorageWorker.lock-duration")
 
   def job: Future[Option[ObjectSummaryWithMd5]] = {
-    logger.info("Commencing job.")
+    val lockService = LockService(lockRepository, lockId = lockID, ttl = lockDuration)
 
-    lockRepository.isLocked(lockID, owner) flatMap {
-      isLocked =>
-        if (isLocked) {
-          logger.info("Job already locked; leaving to other worker.")
-          Future(None)
-        } else
-          lockRepository.takeLock(lockID, owner, lockDuration) flatMap {
-            gainedLock =>
-              if (gainedLock) {
-                logger.info("Lock taken successfully.")
-                val correlationID = UUID.randomUUID()
-                val extractTime   = LocalDateTime.now()
-                val fileName      = getFileName(extractTime)
-                for {
-                  summary <- storeObject(correlationID, extractTime, fileName)
-                  _       <- notifySDES(correlationID, fileName, summary)
-                  _       <- lockRepository.releaseLock(lockID, owner)
-                } yield Some(summary)
-              } else {
-                logger.error("Error occurred trying to take lock.")
-                Future(None)
-              }
-          }
+    lockService.withLock {
+      logger.info("Commencing job.")
+      val correlationID = UUID.randomUUID()
+      val extractTime   = LocalDateTime.now()
+      val fileName      = getFileName(extractTime)
+      for {
+        summary <- storeObject(correlationID, extractTime, fileName)
+        _       <- notifySDES(correlationID, fileName, summary)
+      } yield summary
     }
   }
 
