@@ -35,7 +35,7 @@ class XmlFactory @Inject() (val configuration: Configuration) extends Configured
   private def timestamp(dateTime: LocalDateTime) =
     dateTime.format(DateTimeFormatter ofPattern configured("timePattern"))
 
-  def getOpening: String = s"""<?xml version="1.0" encoding="UTF-8"?><$rootElement>"""
+  def getOpening: String = s"""<?xml version="1.0" encoding="ISO-8859-1"?><$rootElement>"""
 
   def getFileHeader(correlationID: UUID, dateTime: LocalDateTime, numOfReports: Long): String = {
     logger.info(s"Building header $correlationID")
