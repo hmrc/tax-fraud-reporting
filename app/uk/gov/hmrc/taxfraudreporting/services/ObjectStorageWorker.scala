@@ -89,7 +89,7 @@ class ObjectStorageWorker @Inject() (
     objectStoreClient.putObject(path file fileName, fraudReports)
   }
 
-  private val lockID                 = "lockID"
+  private val lockID                 = "lockID_RisKana"
   private val owner                  = "owner"
   private val lockDuration: Duration = configuration.get[Duration]("services.objectStorageWorker.lock-duration")
 
